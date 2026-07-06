@@ -17,6 +17,20 @@ export const setToken = (token: string | null) => {
 // Empty string = relative URL, so Next.js rewrites can proxy to the backend
 const API_BASE = "";
 
+export class ApiError extends Error {
+  status: number;
+  code?: string;
+  data?: Record<string, unknown>;
+
+  constructor(message: string, status: number, data?: Record<string, unknown>) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+    this.code = typeof data?.code === "string" ? data.code : undefined;
+    this.data = data;
+  }
+}
+
 export async function apiFetch<T = unknown>(
   path: string,
   options: RequestInit = {}
@@ -30,8 +44,9 @@ export async function apiFetch<T = unknown>(
 
   const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
   if (!res.ok) {
-    const error = await res.json().catch(() => ({ message: res.statusText }));
-    throw new Error(error.message || "Request failed");
+    const data = await res.json().catch(() => ({}));
+    const message = data.error || data.message || res.statusText || "Request failed";
+    throw new ApiError(message, res.status, data);
   }
   return res.json() as Promise<T>;
 }

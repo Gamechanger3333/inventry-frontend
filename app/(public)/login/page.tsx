@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useLogin } from "@/lib/api-hooks";
+import { ApiError } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,7 +27,13 @@ export default function LoginPage() {
         login(data.token, data.user);
         router.push("/dashboard");
       },
-      onError: () => {
+      onError: (err: unknown) => {
+        if (err instanceof ApiError && err.code === "EMAIL_NOT_VERIFIED") {
+          const verifyEmail = (err.data?.email as string) || email;
+          toast({ title: "Email not verified", description: "Please verify your email to continue." });
+          router.push(`/verify-otp?email=${encodeURIComponent(verifyEmail)}`);
+          return;
+        }
         toast({ title: "Login failed", description: "Invalid email or password.", variant: "destructive" });
       },
     },
@@ -73,7 +80,12 @@ export default function LoginPage() {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="password">Password</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password">Password</Label>
+                  <Link href="/forgot-password" className="text-xs text-primary hover:underline">
+                    Forgot password?
+                  </Link>
+                </div>
                 <div className="relative">
                   <Input
                     id="password"

@@ -4,7 +4,7 @@
  * All hooks follow the same API contract as the original workspace package.
  */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { apiFetch } from "@/lib/api";
+import { apiFetch, ApiError } from "@/lib/api";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -14,6 +14,7 @@ export interface User {
   email: string;
   role: string;
   avatar?: string;
+  emailVerified?: boolean;
 }
 
 export interface Product {
@@ -193,6 +194,15 @@ export interface AuthResponse {
   user: User;
 }
 
+export interface RegisterResponse {
+  message: string;
+  email: string;
+}
+
+export interface MessageResponse {
+  message: string;
+}
+
 export interface LoginInput {
   email: string;
   password: string;
@@ -201,6 +211,25 @@ export interface LoginInput {
 export interface RegisterInput {
   name: string;
   email: string;
+  password: string;
+  role?: string;
+}
+
+export interface VerifyOtpInput {
+  email: string;
+  otp: string;
+}
+
+export interface ResendOtpInput {
+  email: string;
+}
+
+export interface ForgotPasswordInput {
+  email: string;
+}
+
+export interface ResetPasswordInput {
+  token: string;
   password: string;
 }
 
@@ -230,8 +259,8 @@ export function useGetMe(options?: { query?: { enabled?: boolean; retry?: boolea
   });
 }
 
-export function useLogin(options?: { mutation?: { onSuccess?: (data: AuthResponse) => void; onError?: () => void } }) {
-  return useMutation<AuthResponse, Error, { loginInput: LoginInput }>({
+export function useLogin(options?: { mutation?: { onSuccess?: (data: AuthResponse) => void; onError?: (err: unknown) => void } }) {
+  return useMutation<AuthResponse, ApiError, { loginInput: LoginInput }>({
     mutationFn: ({ loginInput }) =>
       apiFetch<AuthResponse>("/api/auth/login", { method: "POST", body: JSON.stringify(loginInput) }),
     onSuccess: options?.mutation?.onSuccess,
@@ -239,10 +268,54 @@ export function useLogin(options?: { mutation?: { onSuccess?: (data: AuthRespons
   });
 }
 
-export function useRegister(options?: { mutation?: { onSuccess?: (data: AuthResponse) => void; onError?: () => void } }) {
-  return useMutation<AuthResponse, Error, { registerInput: RegisterInput }>({
+export function useRegister(options?: { mutation?: { onSuccess?: (data: RegisterResponse) => void; onError?: (err: unknown) => void } }) {
+  return useMutation<RegisterResponse, ApiError, { registerInput: RegisterInput }>({
     mutationFn: ({ registerInput }) =>
-      apiFetch<AuthResponse>("/api/auth/register", { method: "POST", body: JSON.stringify(registerInput) }),
+      apiFetch<RegisterResponse>("/api/auth/register", { method: "POST", body: JSON.stringify(registerInput) }),
+    onSuccess: options?.mutation?.onSuccess,
+    onError: options?.mutation?.onError,
+  });
+}
+
+export function useVerifyOtp(options?: { mutation?: { onSuccess?: (data: AuthResponse) => void; onError?: (err: unknown) => void } }) {
+  return useMutation<AuthResponse, ApiError, VerifyOtpInput>({
+    mutationFn: (input) =>
+      apiFetch<AuthResponse>("/api/auth/verify-otp", { method: "POST", body: JSON.stringify(input) }),
+    onSuccess: options?.mutation?.onSuccess,
+    onError: options?.mutation?.onError,
+  });
+}
+
+export function useResendOtp(options?: { mutation?: { onSuccess?: (data: MessageResponse) => void; onError?: (err: unknown) => void } }) {
+  return useMutation<MessageResponse, ApiError, ResendOtpInput>({
+    mutationFn: (input) =>
+      apiFetch<MessageResponse>("/api/auth/resend-otp", { method: "POST", body: JSON.stringify(input) }),
+    onSuccess: options?.mutation?.onSuccess,
+    onError: options?.mutation?.onError,
+  });
+}
+
+export function useForgotPassword(options?: { mutation?: { onSuccess?: (data: MessageResponse) => void; onError?: (err: unknown) => void } }) {
+  return useMutation<MessageResponse, ApiError, ForgotPasswordInput>({
+    mutationFn: (input) =>
+      apiFetch<MessageResponse>("/api/auth/forgot-password", { method: "POST", body: JSON.stringify(input) }),
+    onSuccess: options?.mutation?.onSuccess,
+    onError: options?.mutation?.onError,
+  });
+}
+
+export function useResetPassword(options?: { mutation?: { onSuccess?: (data: MessageResponse) => void; onError?: (err: unknown) => void } }) {
+  return useMutation<MessageResponse, ApiError, ResetPasswordInput>({
+    mutationFn: (input) =>
+      apiFetch<MessageResponse>("/api/auth/reset-password", { method: "POST", body: JSON.stringify(input) }),
+    onSuccess: options?.mutation?.onSuccess,
+    onError: options?.mutation?.onError,
+  });
+}
+
+export function useVerifyEmailToken(options?: { mutation?: { onSuccess?: (data: AuthResponse) => void; onError?: (err: unknown) => void } }) {
+  return useMutation<AuthResponse, ApiError, { token: string }>({
+    mutationFn: ({ token }) => apiFetch<AuthResponse>(`/api/auth/verify-email?token=${encodeURIComponent(token)}`),
     onSuccess: options?.mutation?.onSuccess,
     onError: options?.mutation?.onError,
   });

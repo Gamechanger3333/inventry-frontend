@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useRegister } from "@/lib/api-hooks";
-import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -24,7 +23,6 @@ const ROLES = [
 
 export default function SignupPage() {
   const router = useRouter();
-  const { login } = useAuth();
   const { toast } = useToast();
 
   const [name, setName] = useState("");
@@ -38,12 +36,11 @@ export default function SignupPage() {
   const registerMutation = useRegister({
     mutation: {
       onSuccess: (data) => {
-        login(data.token, data.user);
-        toast({ title: "Account created!", description: `Welcome to Nexus, ${data.user.name}.` });
-        router.push("/dashboard");
+        toast({ title: "Account created!", description: "We've sent a verification code to your email." });
+        router.push(`/verify-otp?email=${encodeURIComponent(data.email)}`);
       },
-      onError: (err: { response?: { data?: { error?: string } } }) => {
-        const msg = err?.response?.data?.error ?? "Could not create account. Please try again.";
+      onError: (err: unknown) => {
+        const msg = err instanceof Error ? err.message : "Could not create account. Please try again.";
         toast({ title: "Sign up failed", description: msg, variant: "destructive" });
       },
     },
