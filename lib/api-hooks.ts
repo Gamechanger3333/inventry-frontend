@@ -17,15 +17,31 @@ export interface User {
   emailVerified?: boolean;
 }
 
+export interface AiInsight {
+  id: string;
+  type: string;
+  title: string;
+  description: string;
+  priority: string;
+}
+
+export interface AiConversation {
+  id: string;
+  title?: string;
+  createdAt?: string;
+}
 export interface Product {
   id: string;
   name: string;
   sku: string;
   description?: string;
   price: number;
-  cost: number;
-  categoryId?: string;
+  costPrice: number;
+  categoryId?: number;
+  categoryName?: string;
   category?: Category;
+  status: string;
+  reorderPoint?: number;
   stock?: number;
   imageUrl?: string;
   createdAt: string;
@@ -36,8 +52,10 @@ export interface ProductInput {
   sku: string;
   description?: string;
   price: number;
-  cost: number;
-  categoryId?: string;
+  costPrice: number;
+  categoryId?: number;
+  status: string;
+  reorderPoint?: number;
   imageUrl?: string;
 }
 
@@ -57,12 +75,14 @@ export interface Warehouse {
   name: string;
   location: string;
   description?: string;
+  capacity?: number;
 }
 
 export interface WarehouseInput {
   name: string;
   location: string;
   description?: string;
+  capacity?: number;
 }
 
 export interface InventoryItem {
@@ -70,6 +90,9 @@ export interface InventoryItem {
   productId: string;
   warehouseId: string;
   quantity: number;
+  productName?: string;
+  warehouseName?: string;
+  reorderPoint?: number;
   product?: Product;
   warehouse?: Warehouse;
 }
@@ -80,10 +103,27 @@ export interface InventoryTransaction {
   warehouseId: string;
   type: string;
   quantity: number;
-  note?: string;
+  reason?: string;
+  productName?: string;
+  warehouseName?: string;
   createdAt: string;
   product?: Product;
   warehouse?: Warehouse;
+}
+
+export interface InventoryAdjustment {
+  productId: number;
+  warehouseId: number;
+  quantity: number;
+  reason?: string;
+}
+
+export interface InventoryTransfer {
+  productId: number;
+  fromWarehouseId: number;
+  toWarehouseId: number;
+  quantity: number;
+  reason?: string;
 }
 
 export interface Customer {
@@ -92,6 +132,7 @@ export interface Customer {
   email?: string;
   phone?: string;
   address?: string;
+  company?: string;
 }
 
 export interface CustomerInput {
@@ -99,6 +140,7 @@ export interface CustomerInput {
   email?: string;
   phone?: string;
   address?: string;
+  company?: string;
 }
 
 export interface Supplier {
@@ -107,6 +149,8 @@ export interface Supplier {
   email?: string;
   phone?: string;
   address?: string;
+  company?: string;
+  rating?: number;
 }
 
 export interface SupplierInput {
@@ -114,77 +158,102 @@ export interface SupplierInput {
   email?: string;
   phone?: string;
   address?: string;
+  company?: string;
+  rating?: number;
 }
 
 export interface SalesOrder {
   id: string;
-  customerId?: string;
+  orderNumber?: string;
+  customerId?: number;
+  customerName?: string;
   customer?: Customer;
   status: string;
   total: number;
+  discount?: number;
+  notes?: string;
   items?: SalesOrderItem[];
   createdAt: string;
 }
 
 export interface SalesOrderItem {
-  id: string;
-  productId: string;
+  id?: string;
+  productId: number;
   product?: Product;
   quantity: number;
-  price: number;
+  unitPrice: number;
+  discount?: number;
 }
 
 export interface SalesOrderInput {
-  customerId?: string;
-  items: { productId: string; quantity: number; price: number }[];
+  customerId?: number;
+  items: { productId: number; quantity: number; unitPrice: number; discount?: number }[];
+  discount?: number;
+  notes?: string;
 }
 
 export interface PurchaseOrder {
   id: string;
-  supplierId?: string;
+  orderNumber?: string;
+  supplierId?: number;
+  supplierName?: string;
   supplier?: Supplier;
-  warehouseId?: string;
+  warehouseId?: number;
+  warehouseName?: string;
   warehouse?: Warehouse;
   status: string;
   total: number;
+  notes?: string;
   items?: PurchaseOrderItem[];
   createdAt: string;
 }
 
 export interface PurchaseOrderItem {
-  id: string;
-  productId: string;
+  id?: string;
+  productId: number;
   product?: Product;
   quantity: number;
-  cost: number;
+  unitCost: number;
 }
 
 export interface PurchaseOrderInput {
-  supplierId?: string;
-  warehouseId?: string;
-  items: { productId: string; quantity: number; cost: number }[];
+  supplierId?: number;
+  warehouseId?: number;
+  items: { productId: number; quantity: number; unitCost: number }[];
+  notes?: string;
 }
 
 export interface Invoice {
   id: string;
-  customerId?: string;
+  invoiceNumber?: string;
+  customerId?: number;
+  customerName?: string;
   customer?: Customer;
   salesOrderId?: string;
   status: string;
+  subtotal: number;
+  tax: number;
   total: number;
+  notes?: string;
   dueDate?: string;
   createdAt: string;
 }
 
 export interface InvoiceInput {
-  customerId?: string;
+  customerId?: number;
   salesOrderId?: string;
+  subtotal?: number;
+  tax?: number;
+  total?: number;
+  notes?: string;
   dueDate?: string;
 }
 
 export interface Notification {
   id: string;
+  title?: string;
   message: string;
+  type: string;
   read: boolean;
   createdAt: string;
 }
@@ -329,37 +398,50 @@ export function useLogout() {
 
 // ─── Products ─────────────────────────────────────────────────────────────────
 
-export function useListProducts(options?: { query?: { enabled?: boolean } }) {
+export function useListProducts(params?: { search?: string; query?: { enabled?: boolean } }) {
+  const qs = params?.search ? `?search=${encodeURIComponent(params.search)}` : "";
   return useQuery<Product[]>({
-    queryKey: getListProductsQueryKey(),
-    queryFn: () => apiFetch<Product[]>("/api/products"),
-    enabled: options?.query?.enabled ?? true,
+    queryKey: [...getListProductsQueryKey(), params?.search ?? null],
+    queryFn: () => apiFetch<Product[]>(`/api/products${qs}`),
+    enabled: params?.query?.enabled ?? true,
   });
 }
 
-export function useCreateProduct() {
+export function useCreateProduct(options?: { mutation?: { onSuccess?: (data: Product) => void; onError?: (err: Error) => void } }) {
   const qc = useQueryClient();
   return useMutation<Product, Error, { productInput: ProductInput }>({
     mutationFn: ({ productInput }) =>
       apiFetch<Product>("/api/products", { method: "POST", body: JSON.stringify(productInput) }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: getListProductsQueryKey() }),
+    onSuccess: (data) => {
+      options?.mutation?.onSuccess?.(data);
+      qc.invalidateQueries({ queryKey: getListProductsQueryKey() });
+    },
+    onError: options?.mutation?.onError,
   });
 }
 
-export function useUpdateProduct() {
+export function useUpdateProduct(options?: { mutation?: { onSuccess?: (data: Product) => void; onError?: (err: Error) => void } }) {
   const qc = useQueryClient();
   return useMutation<Product, Error, { id: string; productUpdate: Partial<ProductInput> }>({
     mutationFn: ({ id, productUpdate }) =>
       apiFetch<Product>(`/api/products/${id}`, { method: "PUT", body: JSON.stringify(productUpdate) }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: getListProductsQueryKey() }),
+    onSuccess: (data) => {
+      options?.mutation?.onSuccess?.(data);
+      qc.invalidateQueries({ queryKey: getListProductsQueryKey() });
+    },
+    onError: options?.mutation?.onError,
   });
 }
 
-export function useDeleteProduct() {
+export function useDeleteProduct(options?: { mutation?: { onSuccess?: (data: void) => void; onError?: (err: Error) => void } }) {
   const qc = useQueryClient();
   return useMutation<void, Error, { id: string }>({
     mutationFn: ({ id }) => apiFetch<void>(`/api/products/${id}`, { method: "DELETE" }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: getListProductsQueryKey() }),
+    onSuccess: (data) => {
+      options?.mutation?.onSuccess?.(data);
+      qc.invalidateQueries({ queryKey: getListProductsQueryKey() });
+    },
+    onError: options?.mutation?.onError,
   });
 }
 
@@ -373,29 +455,41 @@ export function useListCategories(options?: { query?: { enabled?: boolean } }) {
   });
 }
 
-export function useCreateCategory() {
+export function useCreateCategory(options?: { mutation?: { onSuccess?: (data: Category) => void; onError?: (err: Error) => void } }) {
   const qc = useQueryClient();
   return useMutation<Category, Error, { categoryInput: CategoryInput }>({
     mutationFn: ({ categoryInput }) =>
       apiFetch<Category>("/api/categories", { method: "POST", body: JSON.stringify(categoryInput) }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: getListCategoriesQueryKey() }),
+    onSuccess: (data) => {
+      options?.mutation?.onSuccess?.(data);
+      qc.invalidateQueries({ queryKey: getListCategoriesQueryKey() });
+    },
+    onError: options?.mutation?.onError,
   });
 }
 
-export function useUpdateCategory() {
+export function useUpdateCategory(options?: { mutation?: { onSuccess?: (data: Category) => void; onError?: (err: Error) => void } }) {
   const qc = useQueryClient();
   return useMutation<Category, Error, { id: string; categoryUpdate: Partial<CategoryInput> }>({
     mutationFn: ({ id, categoryUpdate }) =>
       apiFetch<Category>(`/api/categories/${id}`, { method: "PUT", body: JSON.stringify(categoryUpdate) }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: getListCategoriesQueryKey() }),
+    onSuccess: (data) => {
+      options?.mutation?.onSuccess?.(data);
+      qc.invalidateQueries({ queryKey: getListCategoriesQueryKey() });
+    },
+    onError: options?.mutation?.onError,
   });
 }
 
-export function useDeleteCategory() {
+export function useDeleteCategory(options?: { mutation?: { onSuccess?: (data: void) => void; onError?: (err: Error) => void } }) {
   const qc = useQueryClient();
   return useMutation<void, Error, { id: string }>({
     mutationFn: ({ id }) => apiFetch<void>(`/api/categories/${id}`, { method: "DELETE" }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: getListCategoriesQueryKey() }),
+    onSuccess: (data) => {
+      options?.mutation?.onSuccess?.(data);
+      qc.invalidateQueries({ queryKey: getListCategoriesQueryKey() });
+    },
+    onError: options?.mutation?.onError,
   });
 }
 
@@ -409,245 +503,347 @@ export function useListWarehouses(options?: { query?: { enabled?: boolean } }) {
   });
 }
 
-export function useCreateWarehouse() {
+export function useCreateWarehouse(options?: { mutation?: { onSuccess?: (data: Warehouse) => void; onError?: (err: Error) => void } }) {
   const qc = useQueryClient();
   return useMutation<Warehouse, Error, { warehouseInput: WarehouseInput }>({
     mutationFn: ({ warehouseInput }) =>
       apiFetch<Warehouse>("/api/warehouses", { method: "POST", body: JSON.stringify(warehouseInput) }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: getListWarehousesQueryKey() }),
+    onSuccess: (data) => {
+      options?.mutation?.onSuccess?.(data);
+      qc.invalidateQueries({ queryKey: getListWarehousesQueryKey() });
+    },
+    onError: options?.mutation?.onError,
   });
 }
 
-export function useUpdateWarehouse() {
+export function useUpdateWarehouse(options?: { mutation?: { onSuccess?: (data: Warehouse) => void; onError?: (err: Error) => void } }) {
   const qc = useQueryClient();
   return useMutation<Warehouse, Error, { id: string; warehouseUpdate: Partial<WarehouseInput> }>({
     mutationFn: ({ id, warehouseUpdate }) =>
       apiFetch<Warehouse>(`/api/warehouses/${id}`, { method: "PUT", body: JSON.stringify(warehouseUpdate) }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: getListWarehousesQueryKey() }),
+    onSuccess: (data) => {
+      options?.mutation?.onSuccess?.(data);
+      qc.invalidateQueries({ queryKey: getListWarehousesQueryKey() });
+    },
+    onError: options?.mutation?.onError,
   });
 }
 
-export function useDeleteWarehouse() {
+export function useDeleteWarehouse(options?: { mutation?: { onSuccess?: (data: void) => void; onError?: (err: Error) => void } }) {
   const qc = useQueryClient();
   return useMutation<void, Error, { id: string }>({
     mutationFn: ({ id }) => apiFetch<void>(`/api/warehouses/${id}`, { method: "DELETE" }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: getListWarehousesQueryKey() }),
+    onSuccess: (data) => {
+      options?.mutation?.onSuccess?.(data);
+      qc.invalidateQueries({ queryKey: getListWarehousesQueryKey() });
+    },
+    onError: options?.mutation?.onError,
   });
 }
 
 // ─── Inventory ────────────────────────────────────────────────────────────────
 
-export function useListInventory(options?: { query?: { enabled?: boolean } }) {
+export function useListInventory(params?: { search?: string; warehouseId?: string | number; query?: { enabled?: boolean } }) {
+  const qp = new URLSearchParams();
+  if (params?.search) qp.set("search", params.search);
+  if (params?.warehouseId !== undefined) qp.set("warehouseId", String(params.warehouseId));
+  const qs = qp.toString() ? `?${qp.toString()}` : "";
   return useQuery<InventoryItem[]>({
-    queryKey: getListInventoryQueryKey(),
-    queryFn: () => apiFetch<InventoryItem[]>("/api/inventory"),
-    enabled: options?.query?.enabled ?? true,
+    queryKey: [...getListInventoryQueryKey(), params?.search ?? null, params?.warehouseId ?? null],
+    queryFn: () => apiFetch<InventoryItem[]>(`/api/inventory${qs}`),
+    enabled: params?.query?.enabled ?? true,
   });
 }
 
-export function useListInventoryTransactions(options?: { query?: { enabled?: boolean } }) {
+export function useListInventoryTransactions(params?: { limit?: number; query?: { enabled?: boolean } }) {
+  const qs = params?.limit !== undefined ? `?limit=${params.limit}` : "";
   return useQuery<InventoryTransaction[]>({
-    queryKey: getListInventoryTransactionsQueryKey(),
-    queryFn: () => apiFetch<InventoryTransaction[]>("/api/inventory/transactions"),
-    enabled: options?.query?.enabled ?? true,
+    queryKey: [...getListInventoryTransactionsQueryKey(), params?.limit ?? null],
+    queryFn: () => apiFetch<InventoryTransaction[]>(`/api/inventory/transactions${qs}`),
+    enabled: params?.query?.enabled ?? true,
   });
 }
 
-export function useAdjustInventory() {
+export function useAdjustInventory(options?: { mutation?: { onSuccess?: (data: void) => void; onError?: (err: Error) => void } }) {
   const qc = useQueryClient();
-  return useMutation<void, Error, { productId: string; warehouseId: string; quantity: number; note?: string }>({
-    mutationFn: (data) =>
-      apiFetch<void>("/api/inventory/adjust", { method: "POST", body: JSON.stringify(data) }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: getListInventoryQueryKey() }),
+  return useMutation<void, Error, { inventoryAdjustment: InventoryAdjustment }>({
+    mutationFn: ({ inventoryAdjustment }) =>
+      apiFetch<void>("/api/inventory/adjust", { method: "POST", body: JSON.stringify(inventoryAdjustment) }),
+    onSuccess: (data) => {
+      options?.mutation?.onSuccess?.(data);
+      qc.invalidateQueries({ queryKey: getListInventoryQueryKey() });
+    },
+    onError: options?.mutation?.onError,
   });
 }
 
-export function useTransferInventory() {
+export function useTransferInventory(options?: { mutation?: { onSuccess?: (data: void) => void; onError?: (err: Error) => void } }) {
   const qc = useQueryClient();
-  return useMutation<void, Error, { productId: string; fromWarehouseId: string; toWarehouseId: string; quantity: number }>({
-    mutationFn: (data) =>
-      apiFetch<void>("/api/inventory/transfer", { method: "POST", body: JSON.stringify(data) }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: getListInventoryQueryKey() }),
+  return useMutation<void, Error, { inventoryTransfer: InventoryTransfer }>({
+    mutationFn: ({ inventoryTransfer }) =>
+      apiFetch<void>("/api/inventory/transfer", { method: "POST", body: JSON.stringify(inventoryTransfer) }),
+    onSuccess: (data) => {
+      options?.mutation?.onSuccess?.(data);
+      qc.invalidateQueries({ queryKey: getListInventoryQueryKey() });
+    },
+    onError: options?.mutation?.onError,
   });
 }
 
 // ─── Customers ────────────────────────────────────────────────────────────────
 
-export function useListCustomers(options?: { query?: { enabled?: boolean } }) {
+export function useListCustomers(params?: { search?: string; query?: { enabled?: boolean } }) {
+  const qs = params?.search ? `?search=${encodeURIComponent(params.search)}` : "";
   return useQuery<Customer[]>({
-    queryKey: getListCustomersQueryKey(),
-    queryFn: () => apiFetch<Customer[]>("/api/customers"),
-    enabled: options?.query?.enabled ?? true,
+    queryKey: [...getListCustomersQueryKey(), params?.search ?? null],
+    queryFn: () => apiFetch<Customer[]>(`/api/customers${qs}`),
+    enabled: params?.query?.enabled ?? true,
   });
 }
 
-export function useCreateCustomer() {
+export function useCreateCustomer(options?: { mutation?: { onSuccess?: (data: Customer) => void; onError?: (err: Error) => void } }) {
   const qc = useQueryClient();
   return useMutation<Customer, Error, { customerInput: CustomerInput }>({
     mutationFn: ({ customerInput }) =>
       apiFetch<Customer>("/api/customers", { method: "POST", body: JSON.stringify(customerInput) }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: getListCustomersQueryKey() }),
+    onSuccess: (data) => {
+      options?.mutation?.onSuccess?.(data);
+      qc.invalidateQueries({ queryKey: getListCustomersQueryKey() });
+    },
+    onError: options?.mutation?.onError,
   });
 }
 
-export function useUpdateCustomer() {
+export function useUpdateCustomer(options?: { mutation?: { onSuccess?: (data: Customer) => void; onError?: (err: Error) => void } }) {
   const qc = useQueryClient();
   return useMutation<Customer, Error, { id: string; customerUpdate: Partial<CustomerInput> }>({
     mutationFn: ({ id, customerUpdate }) =>
       apiFetch<Customer>(`/api/customers/${id}`, { method: "PUT", body: JSON.stringify(customerUpdate) }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: getListCustomersQueryKey() }),
+    onSuccess: (data) => {
+      options?.mutation?.onSuccess?.(data);
+      qc.invalidateQueries({ queryKey: getListCustomersQueryKey() });
+    },
+    onError: options?.mutation?.onError,
   });
 }
 
-export function useDeleteCustomer() {
+export function useDeleteCustomer(options?: { mutation?: { onSuccess?: (data: void) => void; onError?: (err: Error) => void } }) {
   const qc = useQueryClient();
   return useMutation<void, Error, { id: string }>({
     mutationFn: ({ id }) => apiFetch<void>(`/api/customers/${id}`, { method: "DELETE" }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: getListCustomersQueryKey() }),
+    onSuccess: (data) => {
+      options?.mutation?.onSuccess?.(data);
+      qc.invalidateQueries({ queryKey: getListCustomersQueryKey() });
+    },
+    onError: options?.mutation?.onError,
   });
 }
 
 // ─── Suppliers ────────────────────────────────────────────────────────────────
 
-export function useListSuppliers(options?: { query?: { enabled?: boolean } }) {
+export function useListSuppliers(params?: { search?: string; query?: { enabled?: boolean } }) {
+  const qs = params?.search ? `?search=${encodeURIComponent(params.search)}` : "";
   return useQuery<Supplier[]>({
-    queryKey: getListSuppliersQueryKey(),
-    queryFn: () => apiFetch<Supplier[]>("/api/suppliers"),
-    enabled: options?.query?.enabled ?? true,
+    queryKey: [...getListSuppliersQueryKey(), params?.search ?? null],
+    queryFn: () => apiFetch<Supplier[]>(`/api/suppliers${qs}`),
+    enabled: params?.query?.enabled ?? true,
   });
 }
 
-export function useCreateSupplier() {
+export function useCreateSupplier(options?: { mutation?: { onSuccess?: (data: Supplier) => void; onError?: (err: Error) => void } }) {
   const qc = useQueryClient();
   return useMutation<Supplier, Error, { supplierInput: SupplierInput }>({
     mutationFn: ({ supplierInput }) =>
       apiFetch<Supplier>("/api/suppliers", { method: "POST", body: JSON.stringify(supplierInput) }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: getListSuppliersQueryKey() }),
+    onSuccess: (data) => {
+      options?.mutation?.onSuccess?.(data);
+      qc.invalidateQueries({ queryKey: getListSuppliersQueryKey() });
+    },
+    onError: options?.mutation?.onError,
   });
 }
 
-export function useUpdateSupplier() {
+export function useUpdateSupplier(options?: { mutation?: { onSuccess?: (data: Supplier) => void; onError?: (err: Error) => void } }) {
   const qc = useQueryClient();
   return useMutation<Supplier, Error, { id: string; supplierUpdate: Partial<SupplierInput> }>({
     mutationFn: ({ id, supplierUpdate }) =>
       apiFetch<Supplier>(`/api/suppliers/${id}`, { method: "PUT", body: JSON.stringify(supplierUpdate) }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: getListSuppliersQueryKey() }),
+    onSuccess: (data) => {
+      options?.mutation?.onSuccess?.(data);
+      qc.invalidateQueries({ queryKey: getListSuppliersQueryKey() });
+    },
+    onError: options?.mutation?.onError,
   });
 }
 
-export function useDeleteSupplier() {
+export function useDeleteSupplier(options?: { mutation?: { onSuccess?: (data: void) => void; onError?: (err: Error) => void } }) {
   const qc = useQueryClient();
   return useMutation<void, Error, { id: string }>({
     mutationFn: ({ id }) => apiFetch<void>(`/api/suppliers/${id}`, { method: "DELETE" }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: getListSuppliersQueryKey() }),
+    onSuccess: (data) => {
+      options?.mutation?.onSuccess?.(data);
+      qc.invalidateQueries({ queryKey: getListSuppliersQueryKey() });
+    },
+    onError: options?.mutation?.onError,
   });
 }
 
 // ─── Sales Orders ─────────────────────────────────────────────────────────────
 
-export function useListSalesOrders(options?: { query?: { enabled?: boolean } }) {
+export function useListSalesOrders(params?: { search?: string; status?: string; query?: { enabled?: boolean } }) {
+  const qp = new URLSearchParams();
+  if (params?.search) qp.set("search", params.search);
+  if (params?.status) qp.set("status", params.status);
+  const qs = qp.toString() ? `?${qp.toString()}` : "";
   return useQuery<SalesOrder[]>({
-    queryKey: getListSalesOrdersQueryKey(),
-    queryFn: () => apiFetch<SalesOrder[]>("/api/sales"),
-    enabled: options?.query?.enabled ?? true,
+    queryKey: [...getListSalesOrdersQueryKey(), params?.search ?? null, params?.status ?? null],
+    queryFn: () => apiFetch<SalesOrder[]>(`/api/sales${qs}`),
+    enabled: params?.query?.enabled ?? true,
   });
+}
+
+export interface SalesSummary {
+  totalOrders: number;
+  pendingOrders: number;
+  completedOrders: number;
+  cancelledOrders: number;
 }
 
 export function useGetSalesSummary(options?: { query?: { enabled?: boolean } }) {
-  return useQuery({
+  return useQuery<SalesSummary>({
     queryKey: ["sales-summary"],
-    queryFn: () => apiFetch("/api/sales/summary"),
+    queryFn: () => apiFetch<SalesSummary>("/api/sales/summary"),
     enabled: options?.query?.enabled ?? true,
   });
 }
 
-export function useCreateSalesOrder() {
+export function useCreateSalesOrder(options?: { mutation?: { onSuccess?: (data: SalesOrder) => void; onError?: (err: Error) => void } }) {
   const qc = useQueryClient();
   return useMutation<SalesOrder, Error, { salesOrderInput: SalesOrderInput }>({
     mutationFn: ({ salesOrderInput }) =>
       apiFetch<SalesOrder>("/api/sales", { method: "POST", body: JSON.stringify(salesOrderInput) }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: getListSalesOrdersQueryKey() }),
+    onSuccess: (data) => {
+      options?.mutation?.onSuccess?.(data);
+      qc.invalidateQueries({ queryKey: getListSalesOrdersQueryKey() });
+    },
+    onError: options?.mutation?.onError,
   });
 }
 
-export function useUpdateSalesOrder() {
+export function useUpdateSalesOrder(options?: { mutation?: { onSuccess?: (data: SalesOrder) => void; onError?: (err: Error) => void } }) {
   const qc = useQueryClient();
   return useMutation<SalesOrder, Error, { id: string; salesOrderUpdate: Partial<SalesOrderInput> & { status?: string } }>({
     mutationFn: ({ id, salesOrderUpdate }) =>
       apiFetch<SalesOrder>(`/api/sales/${id}`, { method: "PUT", body: JSON.stringify(salesOrderUpdate) }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: getListSalesOrdersQueryKey() }),
+    onSuccess: (data) => {
+      options?.mutation?.onSuccess?.(data);
+      qc.invalidateQueries({ queryKey: getListSalesOrdersQueryKey() });
+    },
+    onError: options?.mutation?.onError,
   });
 }
 
-export function useDeleteSalesOrder() {
+export function useDeleteSalesOrder(options?: { mutation?: { onSuccess?: (data: void) => void; onError?: (err: Error) => void } }) {
   const qc = useQueryClient();
   return useMutation<void, Error, { id: string }>({
     mutationFn: ({ id }) => apiFetch<void>(`/api/sales/${id}`, { method: "DELETE" }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: getListSalesOrdersQueryKey() }),
+    onSuccess: (data) => {
+      options?.mutation?.onSuccess?.(data);
+      qc.invalidateQueries({ queryKey: getListSalesOrdersQueryKey() });
+    },
+    onError: options?.mutation?.onError,
   });
 }
 
 // ─── Purchase Orders ──────────────────────────────────────────────────────────
 
-export function useListPurchaseOrders(options?: { query?: { enabled?: boolean } }) {
+export function useListPurchaseOrders(params?: { search?: string; status?: string; query?: { enabled?: boolean } }) {
+  const qp = new URLSearchParams();
+  if (params?.search) qp.set("search", params.search);
+  if (params?.status) qp.set("status", params.status);
+  const qs = qp.toString() ? `?${qp.toString()}` : "";
   return useQuery<PurchaseOrder[]>({
-    queryKey: getListPurchaseOrdersQueryKey(),
-    queryFn: () => apiFetch<PurchaseOrder[]>("/api/purchases"),
-    enabled: options?.query?.enabled ?? true,
+    queryKey: [...getListPurchaseOrdersQueryKey(), params?.search ?? null, params?.status ?? null],
+    queryFn: () => apiFetch<PurchaseOrder[]>(`/api/purchases${qs}`),
+    enabled: params?.query?.enabled ?? true,
   });
 }
 
-export function useCreatePurchaseOrder() {
+export function useCreatePurchaseOrder(options?: { mutation?: { onSuccess?: (data: PurchaseOrder) => void; onError?: (err: Error) => void } }) {
   const qc = useQueryClient();
   return useMutation<PurchaseOrder, Error, { purchaseOrderInput: PurchaseOrderInput }>({
     mutationFn: ({ purchaseOrderInput }) =>
       apiFetch<PurchaseOrder>("/api/purchases", { method: "POST", body: JSON.stringify(purchaseOrderInput) }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: getListPurchaseOrdersQueryKey() }),
+    onSuccess: (data) => {
+      options?.mutation?.onSuccess?.(data);
+      qc.invalidateQueries({ queryKey: getListPurchaseOrdersQueryKey() });
+    },
+    onError: options?.mutation?.onError,
   });
 }
 
-export function useUpdatePurchaseOrder() {
+export function useUpdatePurchaseOrder(options?: { mutation?: { onSuccess?: (data: PurchaseOrder) => void; onError?: (err: Error) => void } }) {
   const qc = useQueryClient();
   return useMutation<PurchaseOrder, Error, { id: string; purchaseOrderUpdate: Partial<PurchaseOrderInput> & { status?: string } }>({
     mutationFn: ({ id, purchaseOrderUpdate }) =>
       apiFetch<PurchaseOrder>(`/api/purchases/${id}`, { method: "PUT", body: JSON.stringify(purchaseOrderUpdate) }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: getListPurchaseOrdersQueryKey() }),
+    onSuccess: (data) => {
+      options?.mutation?.onSuccess?.(data);
+      qc.invalidateQueries({ queryKey: getListPurchaseOrdersQueryKey() });
+    },
+    onError: options?.mutation?.onError,
   });
 }
 
-export function useDeletePurchaseOrder() {
+export function useDeletePurchaseOrder(options?: { mutation?: { onSuccess?: (data: void) => void; onError?: (err: Error) => void } }) {
   const qc = useQueryClient();
   return useMutation<void, Error, { id: string }>({
     mutationFn: ({ id }) => apiFetch<void>(`/api/purchases/${id}`, { method: "DELETE" }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: getListPurchaseOrdersQueryKey() }),
+    onSuccess: (data) => {
+      options?.mutation?.onSuccess?.(data);
+      qc.invalidateQueries({ queryKey: getListPurchaseOrdersQueryKey() });
+    },
+    onError: options?.mutation?.onError,
   });
 }
 
 // ─── Invoices ─────────────────────────────────────────────────────────────────
 
-export function useListInvoices(options?: { query?: { enabled?: boolean } }) {
+export function useListInvoices(params?: { search?: string; status?: string; query?: { enabled?: boolean } }) {
+  const qp = new URLSearchParams();
+  if (params?.search) qp.set("search", params.search);
+  if (params?.status) qp.set("status", params.status);
+  const qs = qp.toString() ? `?${qp.toString()}` : "";
   return useQuery<Invoice[]>({
-    queryKey: getListInvoicesQueryKey(),
-    queryFn: () => apiFetch<Invoice[]>("/api/invoices"),
-    enabled: options?.query?.enabled ?? true,
+    queryKey: [...getListInvoicesQueryKey(), params?.search ?? null, params?.status ?? null],
+    queryFn: () => apiFetch<Invoice[]>(`/api/invoices${qs}`),
+    enabled: params?.query?.enabled ?? true,
   });
 }
 
-export function useCreateInvoice() {
+export function useCreateInvoice(options?: { mutation?: { onSuccess?: (data: Invoice) => void; onError?: (err: Error) => void } }) {
   const qc = useQueryClient();
   return useMutation<Invoice, Error, { invoiceInput: InvoiceInput }>({
     mutationFn: ({ invoiceInput }) =>
       apiFetch<Invoice>("/api/invoices", { method: "POST", body: JSON.stringify(invoiceInput) }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: getListInvoicesQueryKey() }),
+    onSuccess: (data) => {
+      options?.mutation?.onSuccess?.(data);
+      qc.invalidateQueries({ queryKey: getListInvoicesQueryKey() });
+    },
+    onError: options?.mutation?.onError,
   });
 }
 
-export function useUpdateInvoice() {
+export function useUpdateInvoice(options?: { mutation?: { onSuccess?: (data: Invoice) => void; onError?: (err: Error) => void } }) {
   const qc = useQueryClient();
   return useMutation<Invoice, Error, { id: string; invoiceUpdate: Partial<InvoiceInput> & { status?: string } }>({
     mutationFn: ({ id, invoiceUpdate }) =>
       apiFetch<Invoice>(`/api/invoices/${id}`, { method: "PUT", body: JSON.stringify(invoiceUpdate) }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: getListInvoicesQueryKey() }),
+    onSuccess: (data) => {
+      options?.mutation?.onSuccess?.(data);
+      qc.invalidateQueries({ queryKey: getListInvoicesQueryKey() });
+    },
+    onError: options?.mutation?.onError,
   });
 }
 
@@ -661,95 +857,176 @@ export function useListNotifications(options?: { query?: { enabled?: boolean } }
   });
 }
 
-export function useMarkNotificationRead() {
+export function useMarkNotificationRead(options?: { mutation?: { onSuccess?: (data: void) => void; onError?: (err: Error) => void } }) {
   const qc = useQueryClient();
   return useMutation<void, Error, { id: string }>({
     mutationFn: ({ id }) => apiFetch<void>(`/api/notifications/${id}/read`, { method: "PUT" }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: getListNotificationsQueryKey() }),
+    onSuccess: (data) => {
+      options?.mutation?.onSuccess?.(data);
+      qc.invalidateQueries({ queryKey: getListNotificationsQueryKey() });
+    },
+    onError: options?.mutation?.onError,
   });
 }
 
-export function useMarkAllNotificationsRead() {
+export function useMarkAllNotificationsRead(options?: { mutation?: { onSuccess?: (data: void) => void; onError?: (err: Error) => void } }) {
   const qc = useQueryClient();
   return useMutation<void, Error, void>({
     mutationFn: () => apiFetch<void>("/api/notifications/read-all", { method: "PUT" }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: getListNotificationsQueryKey() }),
+    onSuccess: (data) => {
+      options?.mutation?.onSuccess?.(data);
+      qc.invalidateQueries({ queryKey: getListNotificationsQueryKey() });
+    },
+    onError: options?.mutation?.onError,
   });
 }
 
 // ─── Dashboard ────────────────────────────────────────────────────────────────
 
+export interface DashboardSummary {
+  totalRevenue: number;
+  revenueGrowth?: number;
+  totalOrders: number;
+  ordersGrowth?: number;
+  totalProducts: number;
+  totalCustomers: number;
+}
+
+export interface RevenueChartPoint {
+  label: string;
+  value: number;
+}
+
+export interface TopProduct {
+  name: string;
+  revenue: number;
+}
+
+export interface RecentActivityItem {
+  description: string;
+  timestamp: string;
+}
+
+export interface LowStockAlert {
+  productName: string;
+  warehouseName: string;
+  quantity: number;
+}
+
 export function useGetDashboardSummary() {
-  return useQuery({
+  return useQuery<DashboardSummary>({
     queryKey: ["dashboard-summary"],
-    queryFn: () => apiFetch("/api/dashboard/summary"),
+    queryFn: () => apiFetch<DashboardSummary>("/api/dashboard/summary"),
   });
 }
 
 export function useGetRevenueChart() {
-  return useQuery({
+  return useQuery<RevenueChartPoint[]>({
     queryKey: ["revenue-chart"],
-    queryFn: () => apiFetch("/api/dashboard/revenue-chart"),
+    queryFn: () => apiFetch<RevenueChartPoint[]>("/api/dashboard/revenue-chart"),
   });
 }
 
 export function useGetTopProducts() {
-  return useQuery({
+  return useQuery<TopProduct[]>({
     queryKey: ["top-products"],
-    queryFn: () => apiFetch("/api/dashboard/top-products"),
+    queryFn: () => apiFetch<TopProduct[]>("/api/dashboard/top-products"),
   });
 }
 
 export function useGetRecentActivity() {
-  return useQuery({
+  return useQuery<RecentActivityItem[]>({
     queryKey: ["recent-activity"],
-    queryFn: () => apiFetch("/api/dashboard/recent-activity"),
+    queryFn: () => apiFetch<RecentActivityItem[]>("/api/dashboard/recent-activity"),
   });
 }
 
 export function useGetLowStockAlerts() {
-  return useQuery({
+  return useQuery<LowStockAlert[]>({
     queryKey: ["low-stock-alerts"],
-    queryFn: () => apiFetch("/api/dashboard/low-stock"),
+    queryFn: () => apiFetch<LowStockAlert[]>("/api/dashboard/low-stock"),
   });
 }
 
 // ─── Reports ──────────────────────────────────────────────────────────────────
 
+export interface InventoryReportCategory {
+  categoryId: string;
+  categoryName: string;
+  totalValue: number;
+  totalStock: number;
+}
+
+export interface InventoryReport {
+  totalStockValue: number;
+  totalItems: number;
+  lowStockCount: number;
+  byCategory: InventoryReportCategory[];
+}
+
+export interface SalesReportCustomer {
+  customerName: string;
+  totalSpent: number;
+}
+
+export interface SalesReport {
+  totalRevenue: number;
+  totalOrders: number;
+  averageOrderValue: number;
+  topCustomers: SalesReportCustomer[];
+}
+
+export interface ProfitLossMonthlyPoint {
+  label: string;
+  revenue: number;
+  cogs: number;
+  profit: number;
+}
+
+export interface ProfitLossReport {
+  totalRevenue: number;
+  totalCost: number;
+  grossProfit: number;
+  grossMargin: number;
+  monthlyData: ProfitLossMonthlyPoint[];
+}
+
 export function useGetInventoryReport() {
-  return useQuery({
+  return useQuery<InventoryReport>({
     queryKey: ["report-inventory"],
-    queryFn: () => apiFetch("/api/reports/inventory"),
+    queryFn: () => apiFetch<InventoryReport>("/api/reports/inventory"),
   });
 }
 
-export function useGetSalesReport() {
-  return useQuery({
-    queryKey: ["report-sales"],
-    queryFn: () => apiFetch("/api/reports/sales"),
+export function useGetSalesReport(params?: { period?: number }) {
+  const qs = params?.period !== undefined ? `?period=${params.period}` : "";
+  return useQuery<SalesReport>({
+    queryKey: ["report-sales", params?.period ?? null],
+    queryFn: () => apiFetch<SalesReport>(`/api/reports/sales${qs}`),
   });
 }
 
-export function useGetProfitLossReport() {
-  return useQuery({
-    queryKey: ["report-profit-loss"],
-    queryFn: () => apiFetch("/api/reports/profit-loss"),
+export function useGetProfitLossReport(params?: { period?: number }) {
+  const qs = params?.period !== undefined ? `?period=${params.period}` : "";
+  return useQuery<ProfitLossReport>({
+    queryKey: ["report-profit-loss", params?.period ?? null],
+    queryFn: () => apiFetch<ProfitLossReport>(`/api/reports/profit-loss${qs}`),
   });
 }
 
 // ─── AI ───────────────────────────────────────────────────────────────────────
 
 export function useGetAiInsights() {
-  return useQuery({
+  return useQuery<AiInsight[]>({
     queryKey: ["ai-insights"],
-    queryFn: () => apiFetch("/api/ai/insights"),
+    queryFn: () => apiFetch<AiInsight[]>("/api/ai/insights"),
   });
 }
 
 export function useGetAiConversations() {
-  return useQuery({
+  return useQuery<AiConversation[]>({
     queryKey: getGetAiConversationsQueryKey(),
-    queryFn: () => apiFetch("/api/ai/conversations"),
+    queryFn: () => apiFetch<AiConversation[]>("/api/ai/conversations"),
   });
 }
 
@@ -757,7 +1034,7 @@ export function usePostAiChat(options?: { mutation?: { onSuccess?: (data: { mess
   const qc = useQueryClient();
   return useMutation<{ message: string; reply: string; role: string; conversationId?: string }, Error, { message: string; conversationId?: string }>({
     mutationFn: (data) => {
-      const body: { message: string; conversationId?: number } = { message: data.message };
+      const body: { message: string; conversationId?: string } = { message: data.message };
       if (data.conversationId !== undefined) body.conversationId = data.conversationId;
       return apiFetch<{ message: string; reply: string; role: string; conversationId?: string }>("/api/ai/chat", { method: "POST", body: JSON.stringify(body) });
     },
