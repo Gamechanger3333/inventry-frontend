@@ -39,7 +39,7 @@ interface Message {
 export default function AIPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
-  const [convId, setConvId] = useState<number | undefined>();
+  const [convId, setConvId] = useState<string | undefined>();
   const bottomRef = useRef<HTMLDivElement>(null);
   const qc = useQueryClient();
 
