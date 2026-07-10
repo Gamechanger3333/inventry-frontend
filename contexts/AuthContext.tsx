@@ -5,11 +5,11 @@ import { useRouter } from "next/navigation";
 import { getToken, setToken, apiFetch } from "@/lib/api";
 
 export interface User {
-  id: string;
+  id: number;
   name: string;
   email: string;
   role: string;
-  avatar?: string;
+  avatar?: string | null;
 }
 
 interface AuthContextType {

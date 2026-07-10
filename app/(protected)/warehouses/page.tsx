@@ -13,10 +13,9 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Plus, Pencil, Trash2, Warehouse as WarehouseIcon, MapPin } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Textarea } from "@/components/ui/textarea";
-
-const empty: WarehouseInput = { name: "", location: "", description: "", capacity: 0 };
+const empty: WarehouseInput = { name: "", location: "", isActive: true };
 
 export default function WarehousesPage() {
   const qc = useQueryClient();
@@ -35,7 +34,7 @@ export default function WarehousesPage() {
   const openCreate = () => { setEditing(null); setForm(empty); setOpen(true); };
   const openEdit = (w: Warehouse) => {
     setEditing(w);
-    setForm({ name: w.name, location: w.location, description: w.description ?? "", capacity: w.capacity ?? 0 });
+    setForm({ name: w.name, location: w.location ?? "", isActive: w.isActive });
     setOpen(true);
   };
 
@@ -69,7 +68,10 @@ export default function WarehousesPage() {
                     <div className="p-2.5 rounded-xl bg-violet-100">
                       <WarehouseIcon className="w-5 h-5 text-violet-600" />
                     </div>
-                    <CardTitle className="text-base">{w.name}</CardTitle>
+                    <div>
+                      <CardTitle className="text-base">{w.name}</CardTitle>
+                      <Badge variant={w.isActive ? "default" : "secondary"} className="text-[10px] mt-1">{w.isActive ? "Active" : "Inactive"}</Badge>
+                    </div>
                   </div>
                   <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(w)}>
@@ -87,12 +89,6 @@ export default function WarehousesPage() {
                   <MapPin className="w-3.5 h-3.5" />
                   <span>{w.location}</span>
                 </div>
-                {w.description && <p className="text-sm text-muted-foreground line-clamp-2">{w.description}</p>}
-                {w.capacity && (
-                  <div className="text-sm font-medium">
-                    Capacity: <span className="text-primary">{w.capacity.toLocaleString()} units</span>
-                  </div>
-                )}
               </CardContent>
             </Card>
           ))}
@@ -110,8 +106,10 @@ export default function WarehousesPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1.5"><Label>Name</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required /></div>
             <div className="space-y-1.5"><Label>Location</Label><Input value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} placeholder="City, State" required /></div>
-            <div className="space-y-1.5"><Label>Description</Label><Textarea value={form.description ?? ""} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={2} /></div>
-            <div className="space-y-1.5"><Label>Capacity (units)</Label><Input type="number" min="0" value={form.capacity ?? 0} onChange={(e) => setForm({ ...form, capacity: Number(e.target.value) })} /></div>
+            <div className="flex items-center gap-2">
+              <input type="checkbox" id="isActive" checked={form.isActive ?? true} onChange={(e) => setForm({ ...form, isActive: e.target.checked })} className="h-4 w-4" />
+              <Label htmlFor="isActive">Active</Label>
+            </div>
             <DialogFooter>
               <Button variant="outline" type="button" onClick={() => setOpen(false)}>Cancel</Button>
               <Button type="submit" disabled={createMut.isPending || updateMut.isPending}>{editing ? "Save" : "Create"}</Button>

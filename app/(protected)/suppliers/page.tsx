@@ -13,10 +13,10 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Pencil, Trash2, Building2, Search, Star } from "lucide-react";
+import { Plus, Pencil, Trash2, Building2, Search } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
-const empty: SupplierInput = { name: "", email: "", phone: "", address: "", company: "", rating: 0 };
+const empty: SupplierInput = { name: "", email: "", phone: "", address: "", contactPerson: "" };
 
 export default function SuppliersPage() {
   const qc = useQueryClient();
@@ -36,7 +36,7 @@ export default function SuppliersPage() {
   const openCreate = () => { setEditing(null); setForm(empty); setOpen(true); };
   const openEdit = (s: Supplier) => {
     setEditing(s);
-    setForm({ name: s.name, email: s.email, phone: s.phone ?? "", address: s.address ?? "", company: s.company ?? "", rating: s.rating ?? 0 });
+    setForm({ name: s.name, email: s.email ?? "", phone: s.phone ?? "", address: s.address ?? "", contactPerson: s.contactPerson ?? "" });
     setOpen(true);
   };
 
@@ -44,11 +44,6 @@ export default function SuppliersPage() {
     e.preventDefault();
     if (editing) updateMut.mutate({ id: editing.id, supplierUpdate: form });
     else createMut.mutate({ supplierInput: form });
-  };
-
-  const ratingStars = (r?: number | null) => {
-    if (!r) return "—";
-    return "★".repeat(Math.round(r)) + "☆".repeat(5 - Math.round(r));
   };
 
   return (
@@ -73,9 +68,9 @@ export default function SuppliersPage() {
           <TableHeader>
             <TableRow>
               <TableHead>Name</TableHead>
-              <TableHead>Company</TableHead>
+              <TableHead>Contact Person</TableHead>
               <TableHead>Email</TableHead>
-              <TableHead>Rating</TableHead>
+              <TableHead>Phone</TableHead>
               <TableHead className="w-20" />
             </TableRow>
           </TableHeader>
@@ -89,9 +84,9 @@ export default function SuppliersPage() {
             ) : suppliers.map((s) => (
               <TableRow key={s.id}>
                 <TableCell className="font-medium">{s.name}</TableCell>
-                <TableCell className="text-muted-foreground">{s.company ?? "—"}</TableCell>
+                <TableCell className="text-muted-foreground">{s.contactPerson ?? "—"}</TableCell>
                 <TableCell className="text-muted-foreground">{s.email}</TableCell>
-                <TableCell className="text-amber-500 text-sm">{ratingStars(s.rating)} {s.rating ? `(${s.rating})` : ""}</TableCell>
+                <TableCell className="text-muted-foreground">{s.phone ?? "—"}</TableCell>
                 <TableCell>
                   <div className="flex gap-1">
                     <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(s)}><Pencil className="w-3.5 h-3.5" /></Button>
@@ -110,10 +105,9 @@ export default function SuppliersPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5 col-span-2"><Label>Name</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required /></div>
-              <div className="space-y-1.5 col-span-2"><Label>Company</Label><Input value={form.company ?? ""} onChange={(e) => setForm({ ...form, company: e.target.value })} /></div>
+              <div className="space-y-1.5 col-span-2"><Label>Contact Person</Label><Input value={form.contactPerson ?? ""} onChange={(e) => setForm({ ...form, contactPerson: e.target.value })} /></div>
               <div className="space-y-1.5 col-span-2"><Label>Email</Label><Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required /></div>
               <div className="space-y-1.5"><Label>Phone</Label><Input value={form.phone ?? ""} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></div>
-              <div className="space-y-1.5"><Label>Rating (0-5)</Label><Input type="number" min="0" max="5" step="0.1" value={form.rating ?? 0} onChange={(e) => setForm({ ...form, rating: Number(e.target.value) })} /></div>
               <div className="space-y-1.5 col-span-2"><Label>Address</Label><Input value={form.address ?? ""} onChange={(e) => setForm({ ...form, address: e.target.value })} /></div>
             </div>
             <DialogFooter>

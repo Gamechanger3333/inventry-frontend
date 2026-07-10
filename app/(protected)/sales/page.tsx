@@ -60,7 +60,7 @@ export default function SalesPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (editing) updateMut.mutate({ id: editing.id, salesOrderUpdate: { status: "processing" } });
+    if (editing) updateMut.mutate({ id: editing.id, salesOrderUpdate: { status: editing.status } });
     else createMut.mutate({ salesOrderInput: form });
   };
 
@@ -166,14 +166,14 @@ export default function SalesPage() {
                   <Label>Items</Label>
                   {form.items.map((item, i) => (
                     <div key={i} className="flex items-center gap-2 text-sm bg-muted p-2 rounded">
-                      <span className="flex-1">{products.find(p => String(p.id) === String(item.productId))?.name} × {item.quantity}</span>
+                      <span className="flex-1">{products.find(p => p.id === item.productId)?.name} × {item.quantity}</span>
                       <span>${(item.quantity * item.unitPrice).toFixed(2)}</span>
                       <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={() => setForm({ ...form, items: form.items.filter((_, j) => j !== i) })}><X className="w-3 h-3" /></Button>
                     </div>
                   ))}
                   <div className="flex gap-2">
                     <Select onValueChange={(v) => {
-                      const p = products.find(pr => String(pr.id) === v);
+                      const p = products.find(pr => pr.id === Number(v));
                       setNewItem({ ...newItem, productId: Number(v), unitPrice: Number(p?.price ?? 0) });
                     }}>
                       <SelectTrigger className="flex-1"><SelectValue placeholder="Add product…" /></SelectTrigger>

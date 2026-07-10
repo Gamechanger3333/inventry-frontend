@@ -2,106 +2,106 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap');
 
 :root {
   --app-font-sans: 'Plus Jakarta Sans', sans-serif;
   --app-font-mono: 'Space Mono', monospace;
 
-  /* Slate/Indigo Light Theme */
-  --background: 220 20% 97%;
-  --foreground: 222 47% 11%;
+  /* ── Nexus identity: warehouse manifest — ink, paper, signal amber ── */
+  --background: 38 30% 97%;
+  --foreground: 222 45% 9%;
 
   --card: 0 0% 100%;
-  --card-foreground: 222 47% 11%;
-  --card-border: 220 13% 91%;
+  --card-foreground: 222 45% 9%;
+  --card-border: 35 20% 89%;
 
   --popover: 0 0% 100%;
-  --popover-foreground: 222 47% 11%;
-  --popover-border: 220 13% 91%;
+  --popover-foreground: 222 45% 9%;
+  --popover-border: 35 20% 89%;
 
-  --primary: 230 70% 30%;
-  --primary-foreground: 0 0% 100%;
+  --primary: 38 92% 50%;
+  --primary-foreground: 222 45% 9%;
 
-  --secondary: 220 14% 96%;
-  --secondary-foreground: 222 47% 11%;
+  --secondary: 35 24% 93%;
+  --secondary-foreground: 222 45% 9%;
 
-  --muted: 220 14% 96%;
-  --muted-foreground: 220 8% 46%;
+  --muted: 35 24% 93%;
+  --muted-foreground: 220 10% 40%;
 
-  --accent: 230 70% 30%;
-  --accent-foreground: 0 0% 100%;
+  --accent: 35 24% 91%;
+  --accent-foreground: 222 45% 9%;
 
-  --destructive: 0 84% 60%;
+  --destructive: 6 78% 52%;
   --destructive-foreground: 0 0% 100%;
 
-  --border: 220 13% 91%;
-  --input: 220 13% 91%;
-  --ring: 230 70% 30%;
+  --border: 35 20% 88%;
+  --input: 35 20% 88%;
+  --ring: 38 92% 50%;
 
-  --chart-1: 230 70% 30%;
-  --chart-2: 200 80% 40%;
-  --chart-3: 160 60% 45%;
-  --chart-4: 280 65% 50%;
-  --chart-5: 340 75% 55%;
+  --chart-1: 38 92% 50%;
+  --chart-2: 205 65% 45%;
+  --chart-3: 152 55% 38%;
+  --chart-4: 265 45% 58%;
+  --chart-5: 350 70% 55%;
 
-  --sidebar: 222 47% 11%;
-  --sidebar-foreground: 210 40% 98%;
-  --sidebar-border: 220 30% 15%;
-  --sidebar-primary: 230 70% 30%;
-  --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 220 30% 20%;
-  --sidebar-accent-foreground: 210 40% 98%;
-  --sidebar-ring: 230 70% 30%;
+  --sidebar: 222 45% 8%;
+  --sidebar-foreground: 40 20% 92%;
+  --sidebar-border: 222 30% 16%;
+  --sidebar-primary: 38 92% 50%;
+  --sidebar-primary-foreground: 222 45% 9%;
+  --sidebar-accent: 222 30% 16%;
+  --sidebar-accent-foreground: 40 20% 92%;
+  --sidebar-ring: 38 92% 50%;
 
-  --radius: 0.5rem;
+  --radius: 0.6rem;
 }
 
 .dark {
-  --background: 222 47% 11%;
-  --foreground: 210 40% 98%;
+  --background: 222 47% 7%;
+  --foreground: 40 20% 94%;
 
-  --card: 222 47% 15%;
-  --card-foreground: 210 40% 98%;
-  --card-border: 220 30% 20%;
+  --card: 222 40% 11%;
+  --card-foreground: 40 20% 94%;
+  --card-border: 222 30% 19%;
 
-  --popover: 222 47% 15%;
-  --popover-foreground: 210 40% 98%;
-  --popover-border: 220 30% 20%;
+  --popover: 222 40% 11%;
+  --popover-foreground: 40 20% 94%;
+  --popover-border: 222 30% 19%;
 
-  --primary: 230 80% 60%;
-  --primary-foreground: 222 47% 11%;
+  --primary: 38 92% 55%;
+  --primary-foreground: 222 47% 7%;
 
-  --secondary: 222 47% 20%;
-  --secondary-foreground: 210 40% 98%;
+  --secondary: 222 35% 16%;
+  --secondary-foreground: 40 20% 94%;
 
-  --muted: 222 47% 20%;
-  --muted-foreground: 215 20% 65%;
+  --muted: 222 35% 16%;
+  --muted-foreground: 220 12% 65%;
 
-  --accent: 230 80% 60%;
-  --accent-foreground: 222 47% 11%;
+  --accent: 222 35% 18%;
+  --accent-foreground: 40 20% 94%;
 
-  --destructive: 0 62% 30%;
-  --destructive-foreground: 210 40% 98%;
+  --destructive: 6 70% 48%;
+  --destructive-foreground: 0 0% 100%;
 
-  --border: 220 30% 20%;
-  --input: 220 30% 20%;
-  --ring: 230 80% 60%;
+  --border: 222 30% 18%;
+  --input: 222 30% 18%;
+  --ring: 38 92% 55%;
 
-  --chart-1: 230 80% 60%;
-  --chart-2: 200 90% 50%;
-  --chart-3: 160 70% 50%;
-  --chart-4: 280 75% 60%;
-  --chart-5: 340 85% 65%;
+  --chart-1: 38 92% 55%;
+  --chart-2: 205 80% 55%;
+  --chart-3: 152 60% 45%;
+  --chart-4: 265 55% 66%;
+  --chart-5: 350 80% 62%;
 
-  --sidebar: 222 47% 9%;
-  --sidebar-foreground: 210 40% 98%;
-  --sidebar-border: 220 30% 15%;
-  --sidebar-primary: 230 80% 60%;
-  --sidebar-primary-foreground: 222 47% 11%;
-  --sidebar-accent: 220 30% 20%;
-  --sidebar-accent-foreground: 210 40% 98%;
-  --sidebar-ring: 230 80% 60%;
+  --sidebar: 222 50% 5%;
+  --sidebar-foreground: 40 20% 92%;
+  --sidebar-border: 222 30% 14%;
+  --sidebar-primary: 38 92% 55%;
+  --sidebar-primary-foreground: 222 47% 7%;
+  --sidebar-accent: 222 30% 16%;
+  --sidebar-accent-foreground: 40 20% 92%;
+  --sidebar-ring: 38 92% 55%;
 }
 
 @layer base {
@@ -110,5 +110,63 @@
   }
   body {
     @apply font-sans antialiased bg-background text-foreground;
+  }
+}
+
+/* ── Signature motifs: warehouse manifest / hazard-label vernacular ── */
+@layer utilities {
+  .font-label {
+    font-family: var(--app-font-mono);
+    letter-spacing: 0.04em;
+  }
+
+  /* Thin hazard-tape accent rule — used sparingly as a section divider */
+  .hazard-rule {
+    height: 6px;
+    background-image: repeating-linear-gradient(
+      -45deg,
+      hsl(var(--primary)) 0,
+      hsl(var(--primary)) 10px,
+      hsl(var(--foreground)) 10px,
+      hsl(var(--foreground)) 20px
+    );
+  }
+
+  /* Perforated ticket edge, like a warehouse pick-ticket / manifest stub */
+  .ticket-notch {
+    -webkit-mask-image: radial-gradient(circle 7px at 0 50%, transparent 98%, black 100%),
+      radial-gradient(circle 7px at 100% 50%, transparent 98%, black 100%);
+    -webkit-mask-repeat: no-repeat;
+    -webkit-mask-position: left center, right center;
+    mask-image: radial-gradient(circle 7px at 0 50%, transparent 98%, black 100%),
+      radial-gradient(circle 7px at 100% 50%, transparent 98%, black 100%);
+    mask-repeat: no-repeat;
+    mask-position: left center, right center;
+  }
+
+  .scanline {
+    position: relative;
+    overflow: hidden;
+  }
+  .scanline::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, hsl(var(--primary)) 20%, hsl(var(--primary)) 80%, transparent);
+    box-shadow: 0 0 12px 2px hsl(var(--primary) / 0.7);
+    animation: scan 3.2s ease-in-out infinite;
+  }
+  @keyframes scan {
+    0%   { top: 6%; opacity: 0; }
+    8%   { opacity: 1; }
+    50%  { top: 94%; opacity: 1; }
+    58%  { opacity: 0; }
+    100% { top: 94%; opacity: 0; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .scanline::after { animation: none; display: none; }
   }
 }

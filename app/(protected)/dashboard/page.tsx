@@ -169,11 +169,11 @@ export default function DashboardPage() {
               {(lowStock ?? []).slice(0, 6).map((item, i) => (
                 <div key={i} className="flex items-center justify-between gap-3">
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{item.productName}</p>
+                    <p className="text-sm font-medium truncate">{item.name}</p>
                     <p className="text-xs text-muted-foreground">{item.warehouseName}</p>
                   </div>
-                  <Badge variant={item.quantity === 0 ? "destructive" : "secondary"} className="shrink-0">
-                    {item.quantity} left
+                  <Badge variant={item.currentStock === 0 ? "destructive" : "secondary"} className="shrink-0">
+                    {item.currentStock} left
                   </Badge>
                 </div>
               ))}
