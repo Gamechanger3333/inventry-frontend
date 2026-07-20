@@ -260,10 +260,16 @@ export interface AuthResponse {
 export interface RegisterResponse {
   message: string;
   email: string;
+  // Only present in non-production when no email provider is configured -
+  // see backend src/routes/auth.ts.
+  devOtp?: string;
 }
 
 export interface MessageResponse {
   message: string;
+  // Dev-only fallbacks - see backend src/routes/auth.ts.
+  devOtp?: string;
+  devResetToken?: string;
 }
 
 export interface LoginInput {
@@ -1009,6 +1015,21 @@ export function usePostAiChat(options?: { mutation?: { onSuccess?: (data: { mess
   return useMutation<{ message: string; reply: string; role: string }, Error, { message: string }>({
     mutationFn: (data) =>
       apiFetch<{ message: string; reply: string; role: string }>("/api/ai/chat", {
+        method: "POST",
+        body: JSON.stringify({ message: data.message }),
+      }),
+    onSuccess: options?.mutation?.onSuccess,
+    onError: options?.mutation?.onError,
+  });
+}
+
+// Unauthenticated variant used by the floating assistant widget on public
+// pages (landing page, login/signup, etc) - no Bearer token required, and
+// scoped server-side to product Q&A only (see backend src/routes/ai.ts).
+export function usePostPublicAiChat(options?: { mutation?: { onSuccess?: (data: { message: string; reply: string; role: string }) => void; onError?: (err: Error) => void } }) {
+  return useMutation<{ message: string; reply: string; role: string }, Error, { message: string }>({
+    mutationFn: (data) =>
+      apiFetch<{ message: string; reply: string; role: string }>("/api/ai/public-chat", {
         method: "POST",
         body: JSON.stringify({ message: data.message }),
       }),

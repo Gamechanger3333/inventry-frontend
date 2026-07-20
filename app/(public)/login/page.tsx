@@ -11,7 +11,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Boxes, Eye, EyeOff } from "lucide-react";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { useToast } from "@/hooks/use-toast";
 
 export default function LoginPage() {
@@ -46,28 +45,23 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen w-full relative flex items-center justify-center bg-foreground text-background overflow-hidden">
+    <div className="min-h-screen w-full relative flex items-center justify-center">
       <div
-        className="absolute inset-0 opacity-[0.05]"
-        style={{
-          backgroundImage: "radial-gradient(currentColor 1px, transparent 1px)",
-          backgroundSize: "22px 22px",
-        }}
+        className="absolute inset-0 bg-cover bg-center"
+        style={{ backgroundImage: "url('https://images.unsplash.com/photo-1557804506-669a67965ba0?w=1920&q=80')" }}
       />
-      <div className="absolute top-4 right-4 z-20">
-        <ThemeToggle className="text-background hover:bg-background/10 hover:text-background" />
-      </div>
+      <div className="absolute inset-0 bg-slate-900/70 backdrop-blur-sm" />
 
       <div className="relative z-10 w-full max-w-md px-4">
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-primary rounded-2xl shadow-2xl mb-4">
             <Boxes className="w-8 h-8 text-primary-foreground" />
           </div>
-          <h1 className="text-3xl font-bold text-background tracking-tight">Nexus</h1>
-          <p className="text-background/70 mt-1">Inventory & Sales Management</p>
+          <h1 className="text-3xl font-bold text-white tracking-tight">Nexus</h1>
+          <p className="text-slate-300 mt-1">Inventory & Sales Management</p>
         </div>
 
-        <Card className="shadow-2xl border-0 bg-card/95 backdrop-blur border-card-border">
+        <Card className="shadow-2xl border-0 bg-white/95 backdrop-blur">
           <CardHeader className="pb-4">
             <CardTitle className="text-xl">Welcome back</CardTitle>
             <CardDescription>Sign in to your account to continue</CardDescription>

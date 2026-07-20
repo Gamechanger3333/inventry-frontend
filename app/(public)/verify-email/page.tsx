@@ -8,7 +8,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Boxes, CheckCircle2, XCircle, Loader2 } from "lucide-react";
-import { ThemeToggle } from "@/components/theme-toggle";
 
 function VerifyEmailInner() {
   const router = useRouter();
@@ -40,27 +39,22 @@ function VerifyEmailInner() {
   }, [token]);
 
   return (
-    <div className="min-h-screen w-full relative flex items-center justify-center bg-foreground text-background overflow-hidden">
+    <div className="min-h-screen w-full relative flex items-center justify-center">
       <div
-        className="absolute inset-0 opacity-[0.05]"
-        style={{
-          backgroundImage: "radial-gradient(currentColor 1px, transparent 1px)",
-          backgroundSize: "22px 22px",
-        }}
+        className="absolute inset-0 bg-cover bg-center"
+        style={{ backgroundImage: "url('https://images.unsplash.com/photo-1557804506-669a67965ba0?w=1920&q=80')" }}
       />
-      <div className="absolute top-4 right-4 z-20">
-        <ThemeToggle className="text-background hover:bg-background/10 hover:text-background" />
-      </div>
+      <div className="absolute inset-0 bg-slate-900/70 backdrop-blur-sm" />
 
       <div className="relative z-10 w-full max-w-md px-4">
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-primary rounded-2xl shadow-2xl mb-4">
             <Boxes className="w-8 h-8 text-primary-foreground" />
           </div>
-          <h1 className="text-3xl font-bold text-background tracking-tight">Nexus</h1>
+          <h1 className="text-3xl font-bold text-white tracking-tight">Nexus</h1>
         </div>
 
-        <Card className="shadow-2xl border-0 bg-card/95 backdrop-blur border-card-border text-center">
+        <Card className="shadow-2xl border-0 bg-white/95 backdrop-blur text-center">
           <CardHeader className="pb-2">
             {status === "loading" && <Loader2 className="w-10 h-10 text-primary animate-spin mx-auto mb-2" />}
             {status === "success" && <CheckCircle2 className="w-10 h-10 text-emerald-500 mx-auto mb-2" />}

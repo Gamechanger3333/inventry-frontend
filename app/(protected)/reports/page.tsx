@@ -96,15 +96,15 @@ export default function ReportsPage() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <Card><CardContent className="p-6">
                   <p className="text-sm text-muted-foreground">Total Stock Value</p>
-                  <p className="text-2xl font-bold mt-1">{fmt(invReport?.stockValue ?? 0)}</p>
+                  <p className="text-2xl font-bold mt-1">{fmt(invReport?.totalStockValue ?? 0)}</p>
                 </CardContent></Card>
                 <Card><CardContent className="p-6">
                   <p className="text-sm text-muted-foreground">Total Items</p>
-                  <p className="text-2xl font-bold mt-1">{(invReport?.totalStock ?? 0).toLocaleString()}</p>
+                  <p className="text-2xl font-bold mt-1">{(invReport?.totalItems ?? 0).toLocaleString()}</p>
                 </CardContent></Card>
                 <Card><CardContent className="p-6">
                   <p className="text-sm text-muted-foreground">Low Stock Products</p>
-                  <p className="text-2xl font-bold mt-1 text-amber-600">{invReport?.lowStockItems ?? 0}</p>
+                  <p className="text-2xl font-bold mt-1 text-amber-600">{invReport?.lowStockCount ?? 0}</p>
                 </CardContent></Card>
               </div>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -113,8 +113,8 @@ export default function ReportsPage() {
                   <CardContent>
                     <ResponsiveContainer width="100%" height={260}>
                       <PieChart>
-                        <Pie data={invReport?.categories ?? []} dataKey="totalStock" nameKey="categoryName" cx="50%" cy="50%" outerRadius={80} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
-                          {(invReport?.categories ?? []).map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                        <Pie data={invReport?.byCategory ?? []} dataKey="totalStock" nameKey="categoryName" cx="50%" cy="50%" outerRadius={80} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
+                          {(invReport?.byCategory ?? []).map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                         </Pie>
                         <Tooltip />
                       </PieChart>
@@ -125,14 +125,14 @@ export default function ReportsPage() {
                   <CardHeader><CardTitle className="text-base">Category Details</CardTitle></CardHeader>
                   <CardContent>
                     <div className="space-y-3">
-                      {(invReport?.categories ?? []).map((c, i) => (
-                        <div key={c.categoryName} className="flex items-center justify-between gap-3">
+                      {(invReport?.byCategory ?? []).map((c, i) => (
+                        <div key={c.categoryId} className="flex items-center justify-between gap-3">
                           <div className="flex items-center gap-2">
                             <div className="w-3 h-3 rounded-full" style={{ background: COLORS[i % COLORS.length] }} />
                             <span className="text-sm font-medium">{c.categoryName}</span>
                           </div>
                           <div className="text-right">
-                            <p className="text-sm font-semibold">{fmt(c.stockValue)}</p>
+                            <p className="text-sm font-semibold">{fmt(c.totalValue)}</p>
                             <p className="text-xs text-muted-foreground">{c.totalStock.toLocaleString()} units</p>
                           </div>
                         </div>

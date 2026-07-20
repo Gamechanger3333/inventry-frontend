@@ -16,7 +16,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Plus, Pencil, Trash2, Users, Search } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
-const empty: CustomerInput = { name: "", email: "", phone: "", address: "", city: "", country: "", notes: "" };
+const empty: CustomerInput = { name: "", email: "", phone: "", address: "", company: "" };
 
 export default function CustomersPage() {
   const qc = useQueryClient();
@@ -36,7 +36,7 @@ export default function CustomersPage() {
   const openCreate = () => { setEditing(null); setForm(empty); setOpen(true); };
   const openEdit = (c: Customer) => {
     setEditing(c);
-    setForm({ name: c.name, email: c.email ?? "", phone: c.phone ?? "", address: c.address ?? "", city: c.city ?? "", country: c.country ?? "", notes: c.notes ?? "" });
+    setForm({ name: c.name, email: c.email, phone: c.phone ?? "", address: c.address ?? "", company: c.company ?? "" });
     setOpen(true);
   };
 
@@ -68,7 +68,7 @@ export default function CustomersPage() {
           <TableHeader>
             <TableRow>
               <TableHead>Name</TableHead>
-              <TableHead>City</TableHead>
+              <TableHead>Company</TableHead>
               <TableHead>Email</TableHead>
               <TableHead>Phone</TableHead>
               <TableHead className="w-20" />
@@ -84,7 +84,7 @@ export default function CustomersPage() {
             ) : customers.map((c) => (
               <TableRow key={c.id}>
                 <TableCell className="font-medium">{c.name}</TableCell>
-                <TableCell className="text-muted-foreground">{c.city ?? "—"}</TableCell>
+                <TableCell className="text-muted-foreground">{c.company ?? "—"}</TableCell>
                 <TableCell className="text-muted-foreground">{c.email}</TableCell>
                 <TableCell className="text-muted-foreground">{c.phone ?? "—"}</TableCell>
                 <TableCell>
@@ -105,8 +105,7 @@ export default function CustomersPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5 col-span-2"><Label>Full Name</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required /></div>
-              <div className="space-y-1.5"><Label>City</Label><Input value={form.city ?? ""} onChange={(e) => setForm({ ...form, city: e.target.value })} /></div>
-              <div className="space-y-1.5"><Label>Country</Label><Input value={form.country ?? ""} onChange={(e) => setForm({ ...form, country: e.target.value })} /></div>
+              <div className="space-y-1.5 col-span-2"><Label>Company</Label><Input value={form.company ?? ""} onChange={(e) => setForm({ ...form, company: e.target.value })} /></div>
               <div className="space-y-1.5 col-span-2"><Label>Email</Label><Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required /></div>
               <div className="space-y-1.5"><Label>Phone</Label><Input value={form.phone ?? ""} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></div>
               <div className="space-y-1.5 col-span-2"><Label>Address</Label><Input value={form.address ?? ""} onChange={(e) => setForm({ ...form, address: e.target.value })} /></div>

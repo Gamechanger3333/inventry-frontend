@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { useGetAiInsights, usePostAiChat } from "@/lib/api-hooks";
+import { useGetAiInsights, useGetAiConversations, usePostAiChat, getGetAiConversationsQueryKey } from "@/lib/api-hooks";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -38,7 +39,9 @@ interface Message {
 export default function AIPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
+  const [convId, setConvId] = useState<string | undefined>();
   const bottomRef = useRef<HTMLDivElement>(null);
+  const qc = useQueryClient();
 
   const { data: insights, isLoading: insightsLoading } = useGetAiInsights();
 
@@ -46,6 +49,8 @@ export default function AIPage() {
     mutation: {
       onSuccess: (data) => {
         setMessages((prev) => [...prev, { role: "assistant", content: data.message }]);
+        setConvId(data.conversationId);
+        qc.invalidateQueries({ queryKey: getGetAiConversationsQueryKey() });
       },
     },
   });
@@ -59,7 +64,7 @@ export default function AIPage() {
     if (!msg) return;
     setMessages((prev) => [...prev, { role: "user", content: msg }]);
     setInput("");
-    chatMut.mutate({ message: msg });
+    chatMut.mutate({ message: msg, conversationId: convId });
   }
 
   return (
