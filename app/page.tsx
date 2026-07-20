@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useState, useEffect } from "react";
 import {
   Boxes, BarChart3, ShoppingCart, Package, Users, Truck,
   FileText, Warehouse, TrendingUp, Shield, Zap,
@@ -9,10 +10,23 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
-const HERO_IMG      = "https://images.unsplash.com/photo-1553877522-43269d4ea984?w=900&q=80";
-const CTA_BG_IMG    = "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=1600&q=80";
-const HOW_BG_IMG    = "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1600&q=80";
-const FEATURE_IMG   = "https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&q=80";
+// Fallback image — used if any remote image fails to load
+const FALLBACK_IMG  = "https://images.unsplash.com/photo-1553877522-43269d4ea984?w=1600&q=80&auto=format&fit=crop";
+
+// Hero background slideshow — 4 HD, warehouse/inventory-context images that crossfade
+const HERO_SLIDES = [
+  { src: "https://images.unsplash.com/photo-1553413077-190dd305871c?w=1920&q=80&auto=format&fit=crop", alt: "Warehouse associate managing inventory boxes" },
+  { src: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=1920&q=80&auto=format&fit=crop", alt: "Organised warehouse storage aisle" },
+  { src: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=1920&q=80&auto=format&fit=crop", alt: "Forklift moving pallets between racks" },
+  { src: "https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=1920&q=80&auto=format&fit=crop", alt: "Team reviewing live inventory dashboard" },
+];
+
+const FEATURE_IMG      = "https://images.unsplash.com/photo-1497366216548-37526070297c?w=1000&q=80&auto=format&fit=crop";
+const HIGHLIGHTS_IMG   = "https://images.unsplash.com/photo-1601599963565-b7f49c6bffde?w=1920&q=80&auto=format&fit=crop";
+const HOW_BG_IMG       = "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1920&q=80&auto=format&fit=crop";
+const TESTIMONIALS_IMG = "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1920&q=80&auto=format&fit=crop";
+const CHECKLIST_IMG    = "https://images.unsplash.com/photo-1552664730-d307ca884978?w=900&q=80&auto=format&fit=crop";
+const CTA_BG_IMG       = "https://images.unsplash.com/photo-1517705008128-361805f42e86?w=1920&q=80&auto=format&fit=crop";
 
 const features = [
   { icon: BarChart3,   color: "bg-violet-100 text-violet-600", title: "Real-Time Dashboard",     desc: "Live KPIs, revenue charts, and business health metrics updated instantly." },
@@ -46,6 +60,15 @@ const stats = [
 ];
 
 export default function LandingPage() {
+  const [heroIndex, setHeroIndex] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setHeroIndex((i) => (i + 1) % HERO_SLIDES.length);
+    }, 4500);
+    return () => clearInterval(timer);
+  }, []);
+
   return (
     <div className="min-h-screen bg-white text-slate-900 overflow-x-hidden">
 
@@ -75,92 +98,108 @@ export default function LandingPage() {
       </header>
 
       {/* ══════════════════════════════════════
-          HERO — split layout, real image right
+          HERO — full-bleed crossfading image background
          ══════════════════════════════════════ */}
-      <section className="pt-24 pb-0 relative overflow-hidden bg-gradient-to-br from-violet-50 via-white to-blue-50">
-        <div className="absolute -top-32 -right-32 w-[500px] h-[500px] bg-violet-200/30 rounded-full blur-3xl -z-10" />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center min-h-[85vh] pb-16">
+      <section className="relative pt-16 min-h-[640px] h-[92vh] sm:h-[88vh] flex items-end sm:items-center overflow-hidden">
 
-            {/* Left — copy */}
-            <div className="flex flex-col justify-center pt-8 lg:pt-0">
-              <Badge variant="secondary" className="self-start mb-6 bg-violet-100 text-violet-700 border-violet-200 px-4 py-1.5 text-xs font-semibold tracking-wide uppercase">
-                ✦ All-in-one Inventory & Sales Platform
-              </Badge>
+        {/* Crossfading background images */}
+        <div className="absolute inset-0">
+          {HERO_SLIDES.map((slide, i) => (
+            <img
+              key={slide.src}
+              src={slide.src}
+              alt={slide.alt}
+              loading={i === 0 ? "eager" : "lazy"}
+              onError={(e) => { (e.currentTarget as HTMLImageElement).src = FALLBACK_IMG; }}
+              className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-[1800ms] ease-in-out ${
+                i === heroIndex ? "opacity-100" : "opacity-0"
+              }`}
+            />
+          ))}
+        </div>
 
-              <h1 className="text-5xl sm:text-6xl font-extrabold tracking-tight leading-[1.06]">
-                Run your
-                <br />
-                inventory
-                <span className="block text-transparent bg-clip-text bg-gradient-to-r from-violet-600 to-blue-600">
-                  like a pro
-                </span>
-              </h1>
+        {/* Readability overlay — darker at bottom-left where the text sits, lighter toward the right */}
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/55 to-slate-950/20 sm:bg-gradient-to-r sm:from-slate-950/85 sm:via-slate-950/60 sm:to-slate-950/10" />
 
-              <p className="mt-6 text-lg text-slate-500 leading-relaxed max-w-lg">
-                Nexus gives growing businesses one command centre for products, warehouses, sales, purchases, invoices, and analytics — updated in real time.
-              </p>
+        {/* Slide progress dots */}
+        <div className="absolute bottom-5 sm:bottom-8 right-4 sm:right-8 z-10 flex gap-1.5">
+          {HERO_SLIDES.map((_, i) => (
+            <button
+              key={i}
+              aria-label={`Show slide ${i + 1}`}
+              onClick={() => setHeroIndex(i)}
+              className={`h-1.5 rounded-full transition-all duration-300 ${
+                i === heroIndex ? "w-6 bg-white" : "w-1.5 bg-white/40 hover:bg-white/70"
+              }`}
+            />
+          ))}
+        </div>
 
-              <div className="mt-8 flex flex-col sm:flex-row gap-3">
-                <Link href="/signup">
-                  <Button size="lg" className="h-12 px-8 text-base shadow-lg shadow-violet-200">
-                    Start for free <ArrowRight className="ml-2 w-4 h-4" />
-                  </Button>
-                </Link>
-                <Link href="/login">
-                  <Button size="lg" variant="outline" className="h-12 px-8 text-base border-slate-300">
-                    Sign in to dashboard
-                  </Button>
-                </Link>
+        {/* Content */}
+        <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 pb-14 sm:pb-0">
+          <div className="max-w-xl">
+            <Badge variant="secondary" className="mb-6 bg-white/10 backdrop-blur-sm text-white border-white/20 px-4 py-1.5 text-xs font-semibold tracking-wide uppercase">
+              ✦ All-in-one Inventory & Sales Platform
+            </Badge>
+
+            <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight leading-[1.06] text-white drop-shadow-sm">
+              Run your inventory
+              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-violet-300 to-blue-200">
+                like a pro
+              </span>
+            </h1>
+
+            <p className="mt-5 sm:mt-6 text-base sm:text-lg text-slate-200 leading-relaxed max-w-lg">
+              Nexus gives growing businesses one command centre for products, warehouses, sales, purchases, invoices, and analytics — updated in real time.
+            </p>
+
+            <div className="mt-8 flex flex-col sm:flex-row gap-3">
+              <Link href="/signup">
+                <Button size="lg" className="h-12 px-8 text-base w-full sm:w-auto shadow-lg shadow-black/20">
+                  Start for free <ArrowRight className="ml-2 w-4 h-4" />
+                </Button>
+              </Link>
+              <Link href="/login">
+                <Button size="lg" variant="outline" className="h-12 px-8 text-base w-full sm:w-auto bg-white/5 backdrop-blur-sm border-white/30 text-white hover:bg-white/15 hover:text-white">
+                  Sign in to dashboard
+                </Button>
+              </Link>
+            </div>
+            <p className="mt-3 text-xs text-slate-300">No credit card required · Demo: sarah@acmecorp.com / password123</p>
+
+            {/* Mini stat row */}
+            <div className="mt-10 grid grid-cols-3 gap-4 border-t border-white/20 pt-6">
+              {[
+                { n: "13", label: "App modules" },
+                { n: "6",  label: "User roles" },
+                { n: "∞",  label: "Products & SKUs" },
+              ].map((s) => (
+                <div key={s.label}>
+                  <p className="text-2xl sm:text-3xl font-extrabold text-white">{s.n}</p>
+                  <p className="text-[11px] sm:text-xs text-slate-300 mt-0.5">{s.label}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Floating stat cards — hidden on small screens to keep mobile clean */}
+          <div className="hidden lg:block absolute right-6 top-1/2 -translate-y-1/2 space-y-4">
+            <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl px-5 py-3.5 flex items-center gap-3 border border-white/50 w-64">
+              <div className="w-9 h-9 bg-emerald-100 rounded-xl flex items-center justify-center shrink-0">
+                <TrendingUp className="w-[18px] h-[18px] text-emerald-600" />
               </div>
-              <p className="mt-3 text-xs text-slate-400">No credit card required · Demo: sarah@acmecorp.com / password123</p>
-
-              {/* Mini stat row */}
-              <div className="mt-10 grid grid-cols-3 gap-4 border-t border-slate-200 pt-8">
-                {[
-                  { n: "13", label: "App modules" },
-                  { n: "6",  label: "User roles" },
-                  { n: "∞",  label: "Products & SKUs" },
-                ].map((s) => (
-                  <div key={s.label}>
-                    <p className="text-3xl font-extrabold text-slate-900">{s.n}</p>
-                    <p className="text-xs text-slate-500 mt-0.5">{s.label}</p>
-                  </div>
-                ))}
+              <div>
+                <p className="text-[11px] text-slate-400 font-medium">Revenue this month</p>
+                <p className="text-base font-bold text-slate-900">$14,979.60</p>
               </div>
             </div>
-
-            {/* Right — real Unsplash hero image */}
-            <div className="relative flex items-end justify-center lg:justify-end h-full">
-              <div className="relative w-full max-w-lg lg:max-w-none">
-                {/* Decorative blob behind the image */}
-                <div className="absolute -inset-4 bg-gradient-to-br from-violet-400/20 to-blue-400/20 rounded-3xl blur-2xl" />
-                <img
-                  src={HERO_IMG}
-                  alt="Modern warehouse and logistics management"
-                  className="relative rounded-2xl shadow-2xl shadow-violet-200/60 w-full object-cover"
-                  style={{ maxHeight: "560px" }}
-                />
-                {/* Floating stat badge */}
-                <div className="absolute -left-6 top-10 bg-white rounded-2xl shadow-xl px-5 py-3.5 flex items-center gap-3 border border-slate-100">
-                  <div className="w-9 h-9 bg-emerald-100 rounded-xl flex items-center justify-center shrink-0">
-                    <TrendingUp className="w-4.5 h-4.5 text-emerald-600 w-[18px] h-[18px]" />
-                  </div>
-                  <div>
-                    <p className="text-[11px] text-slate-400 font-medium">Revenue this month</p>
-                    <p className="text-base font-bold text-slate-900">$14,979.60</p>
-                  </div>
-                </div>
-                {/* Floating orders badge */}
-                <div className="absolute -right-5 bottom-10 bg-white rounded-2xl shadow-xl px-5 py-3 flex items-center gap-3 border border-slate-100">
-                  <div className="w-9 h-9 bg-violet-100 rounded-xl flex items-center justify-center shrink-0">
-                    <Package className="w-[18px] h-[18px] text-violet-600" />
-                  </div>
-                  <div>
-                    <p className="text-[11px] text-slate-400 font-medium">Orders processed</p>
-                    <p className="text-base font-bold text-slate-900">7 orders ✓</p>
-                  </div>
-                </div>
+            <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl px-5 py-3.5 flex items-center gap-3 border border-white/50 w-64">
+              <div className="w-9 h-9 bg-violet-100 rounded-xl flex items-center justify-center shrink-0">
+                <Package className="w-[18px] h-[18px] text-violet-600" />
+              </div>
+              <div>
+                <p className="text-[11px] text-slate-400 font-medium">Orders processed</p>
+                <p className="text-base font-bold text-slate-900">7 orders ✓</p>
               </div>
             </div>
           </div>
@@ -200,8 +239,9 @@ export default function LandingPage() {
               <img
                 src={FEATURE_IMG}
                 alt="Team working in modern office"
-                className="rounded-2xl object-cover shadow-xl w-full"
-                style={{ maxHeight: "500px" }}
+                loading="lazy"
+                onError={(e) => { (e.currentTarget as HTMLImageElement).src = FALLBACK_IMG; }}
+                className="rounded-2xl object-cover shadow-xl w-full h-64 sm:h-[420px] lg:h-[500px]"
               />
               <div className="absolute inset-0 rounded-2xl bg-gradient-to-t from-slate-900/40 via-transparent to-transparent" />
               <div className="absolute bottom-6 left-6 right-6">
@@ -231,9 +271,12 @@ export default function LandingPage() {
           HIGHLIGHTS — real warehouse photo bg
          ══════════════════════════════════════ */}
       <section className="py-20 relative overflow-hidden text-white">
-        <div
-          className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: `url('${CTA_BG_IMG}')` }}
+        <img
+          src={HIGHLIGHTS_IMG}
+          alt="Warehouse shelving stocked with inventory"
+          loading="lazy"
+          onError={(e) => { (e.currentTarget as HTMLImageElement).src = FALLBACK_IMG; }}
+          className="absolute inset-0 w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-slate-900/75 backdrop-blur-[2px]" />
         <div className="relative max-w-5xl mx-auto px-4 sm:px-6">
@@ -261,9 +304,12 @@ export default function LandingPage() {
           HOW IT WORKS — photo bg
          ══════════════════════════════════════ */}
       <section id="how-it-works" className="py-24 px-4 sm:px-6 relative overflow-hidden">
-        <div
-          className="absolute inset-0 bg-cover bg-center opacity-5"
-          style={{ backgroundImage: `url('${HOW_BG_IMG}')` }}
+        <img
+          src={HOW_BG_IMG}
+          alt="Team collaborating around a laptop"
+          loading="lazy"
+          onError={(e) => { (e.currentTarget as HTMLImageElement).src = FALLBACK_IMG; }}
+          className="absolute inset-0 w-full h-full object-cover opacity-[0.06]"
         />
         <div className="relative max-w-5xl mx-auto">
           <div className="text-center mb-14">
@@ -287,8 +333,15 @@ export default function LandingPage() {
       </section>
 
       {/* ── TESTIMONIALS ── */}
-      <section id="testimonials" className="py-24 px-4 sm:px-6 bg-slate-50">
-        <div className="max-w-5xl mx-auto">
+      <section id="testimonials" className="py-24 px-4 sm:px-6 bg-slate-50 relative overflow-hidden">
+        <img
+          src={TESTIMONIALS_IMG}
+          alt="Business team collaborating"
+          loading="lazy"
+          onError={(e) => { (e.currentTarget as HTMLImageElement).src = FALLBACK_IMG; }}
+          className="absolute inset-0 w-full h-full object-cover opacity-[0.05]"
+        />
+        <div className="relative max-w-5xl mx-auto">
           <div className="text-center mb-14">
             <Badge variant="secondary" className="mb-4 bg-amber-50 text-amber-600 border-amber-100">Testimonials</Badge>
             <h2 className="text-4xl font-bold tracking-tight">Trusted by operations teams</h2>
@@ -336,8 +389,18 @@ export default function LandingPage() {
               ))}
             </div>
           </div>
-          <div className="bg-gradient-to-br from-violet-50 to-blue-50 rounded-2xl p-8 border border-violet-100">
-            <div className="text-center">
+          <div className="bg-gradient-to-br from-violet-50 to-blue-50 rounded-2xl overflow-hidden border border-violet-100">
+            <div className="relative h-40 sm:h-48">
+              <img
+                src={CHECKLIST_IMG}
+                alt="Team reviewing business dashboard"
+                loading="lazy"
+                onError={(e) => { (e.currentTarget as HTMLImageElement).src = FALLBACK_IMG; }}
+                className="absolute inset-0 w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-violet-50 via-violet-50/20 to-transparent" />
+            </div>
+            <div className="text-center p-8 pt-2">
               <TrendingUp className="w-12 h-12 text-violet-600 mx-auto mb-4" />
               <h3 className="text-2xl font-bold mb-2">Free to try</h3>
               <p className="text-slate-500 text-sm mb-6">Start with our demo account and explore every feature before adding your own data.</p>
@@ -363,9 +426,12 @@ export default function LandingPage() {
           CTA — real warehouse photo background
          ══════════════════════════════════════ */}
       <section className="relative py-24 px-4 sm:px-6 text-white text-center overflow-hidden">
-        <div
-          className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: `url('${CTA_BG_IMG}')` }}
+        <img
+          src={CTA_BG_IMG}
+          alt="Modern warehouse ready for operations"
+          loading="lazy"
+          onError={(e) => { (e.currentTarget as HTMLImageElement).src = FALLBACK_IMG; }}
+          className="absolute inset-0 w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-br from-violet-900/90 to-slate-900/90" />
         <div className="relative">
