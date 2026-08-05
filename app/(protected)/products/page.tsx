@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import {
   useListProducts, useCreateProduct, useUpdateProduct, useDeleteProduct, useListCategories,
   type Product, type ProductInput,
@@ -32,6 +33,8 @@ const emptyForm: ProductInput = {
 export default function ProductsPage() {
   const qc = useQueryClient();
   const { toast } = useToast();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Product | null>(null);
@@ -52,6 +55,15 @@ export default function ProductsPage() {
     setForm({ name: p.name, sku: p.sku, description: p.description ?? "", price: Number(p.price), costPrice: Number(p.costPrice), status: p.status, categoryId: p.categoryId ?? undefined, imageUrl: p.imageUrl ?? "", reorderPoint: p.reorderPoint ?? 10 });
     setOpen(true);
   };
+
+  // Deep link from Dashboard "Add product" quick action (/products?new=1)
+  useEffect(() => {
+    if (searchParams.get("new") === "1") {
+      openCreate();
+      router.replace("/products");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

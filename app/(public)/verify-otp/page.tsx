@@ -107,12 +107,12 @@ function VerifyOtpForm() {
         className="absolute inset-0 bg-cover bg-center"
         style={{ backgroundImage: "url('https://images.unsplash.com/photo-1557804506-669a67965ba0?w=1920&q=80')" }}
       />
-      <div className="absolute inset-0 bg-slate-900/70 backdrop-blur-sm" />
+      <div className="absolute inset-0 bg-slate-900/70" />
 
       <div className="relative z-10 w-full max-w-md px-4">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-primary rounded-2xl shadow-2xl mb-4">
-            <Boxes className="w-8 h-8 text-primary-foreground" />
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-violet-600 to-blue-600 rounded-2xl shadow-2xl mb-4">
+            <Boxes className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-3xl font-bold text-white tracking-tight">Nexus</h1>
         </div>
@@ -122,9 +122,9 @@ function VerifyOtpForm() {
             <div className="inline-flex items-center justify-center w-12 h-12 bg-primary/10 rounded-full mx-auto mb-2">
               <MailCheck className="w-6 h-6 text-primary" />
             </div>
-            <CardTitle className="text-xl">Verify your email</CardTitle>
-            <CardDescription>
-              We sent a 6-digit code to <span className="font-medium text-foreground">{email || "your email"}</span>.
+            <CardTitle className="text-xl text-slate-900">Verify your email</CardTitle>
+            <CardDescription className="text-slate-500">
+              We sent a 6-digit code to <span className="font-medium text-slate-900">{email || "your email"}</span>.
               Enter it below, or click the link in the email instead.
             </CardDescription>
           </CardHeader>
@@ -142,17 +142,17 @@ function VerifyOtpForm() {
                     onKeyDown={(e) => handleKeyDown(i, e)}
                     inputMode="numeric"
                     maxLength={1}
-                    className="w-11 h-13 text-center text-xl font-semibold"
+                    className="w-11 h-13 text-center text-xl font-semibold bg-white text-slate-900 border-slate-200"
                   />
                 ))}
               </div>
 
-              <Button type="submit" className="w-full" disabled={verifyMutation.isPending}>
+              <Button type="submit" className="w-full bg-[hsl(230,70%,30%)] hover:bg-[hsl(230,70%,25%)] text-white border-[hsl(230,70%,30%)]" disabled={verifyMutation.isPending}>
                 {verifyMutation.isPending ? "Verifying…" : "Verify email"}
               </Button>
             </form>
 
-            <div className="text-sm text-center text-muted-foreground mt-4">
+            <div className="text-sm text-center text-slate-500 mt-4">
               Didn't get the code?{" "}
               <button
                 type="button"
@@ -164,7 +164,7 @@ function VerifyOtpForm() {
               </button>
             </div>
 
-            <p className="text-sm text-center text-muted-foreground mt-4">
+            <p className="text-sm text-center text-slate-500 mt-4">
               <Link href="/login" className="text-primary font-medium hover:underline">
                 Back to sign in
               </Link>

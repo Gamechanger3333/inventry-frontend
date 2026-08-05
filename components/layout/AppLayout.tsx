@@ -48,11 +48,11 @@ export function AppLayout({ children }: { children: ReactNode }) {
       <div className="flex min-h-screen w-full bg-background/50">
         <Sidebar>
           <SidebarHeader className="h-16 flex items-center px-4 border-b">
-            <div className="flex items-center gap-2 font-bold text-lg text-primary tracking-tight">
-              <div className="w-8 h-8 bg-primary rounded-md flex items-center justify-center text-primary-foreground">
+            <div className="flex items-center gap-2 font-bold text-lg text-white tracking-tight">
+              <div className="w-8 h-8 bg-gradient-to-br from-violet-600 to-blue-600 rounded-md flex items-center justify-center text-white shrink-0">
                 <Boxes size={18} />
               </div>
-              <span>Nexus</span>
+              <span className="text-white">Nexus</span>
             </div>
           </SidebarHeader>
           <SidebarContent>

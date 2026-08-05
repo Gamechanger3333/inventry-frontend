@@ -41,7 +41,7 @@ export function ScrollButtons() {
           aria-label="Scroll to top"
           className={cn(
             "flex h-10 w-10 items-center justify-center rounded-full",
-            "bg-primary text-primary-foreground border border-primary-border shadow-md",
+            "bg-[hsl(230,70%,30%)] hover:bg-[hsl(230,70%,25%)] text-white border border-[hsl(230,70%,30%)] shadow-md",
             "transition-opacity hover-elevate active-elevate-2"
           )}
         >
@@ -54,7 +54,7 @@ export function ScrollButtons() {
           aria-label="Scroll to bottom"
           className={cn(
             "flex h-10 w-10 items-center justify-center rounded-full",
-            "bg-primary text-primary-foreground border border-primary-border shadow-md",
+            "bg-[hsl(230,70%,30%)] hover:bg-[hsl(230,70%,25%)] text-white border border-[hsl(230,70%,30%)] shadow-md",
             "transition-opacity hover-elevate active-elevate-2"
           )}
         >

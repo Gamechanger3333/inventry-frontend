@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
 import { ScrollButtons } from "@/components/ScrollButtons";
+import { AiAssistantWidget } from "@/components/AiAssistantWidget";
 
 export const metadata: Metadata = {
   title: "Nexus — Inventory & Sales Management",
@@ -15,6 +16,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Providers>
           {children}
           <ScrollButtons />
+          <AiAssistantWidget />
         </Providers>
       </body>
     </html>

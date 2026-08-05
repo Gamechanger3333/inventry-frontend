@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import {
   useListCustomers, useCreateCustomer, useUpdateCustomer, useDeleteCustomer,
   type Customer, type CustomerInput,
@@ -21,6 +22,8 @@ const empty: CustomerInput = { name: "", email: "", phone: "", address: "", comp
 export default function CustomersPage() {
   const qc = useQueryClient();
   const { toast } = useToast();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Customer | null>(null);
@@ -34,6 +37,15 @@ export default function CustomersPage() {
   const deleteMut = useDeleteCustomer({ mutation: { onSuccess: () => { invalidate(); toast({ title: "Customer deleted" }); } } });
 
   const openCreate = () => { setEditing(null); setForm(empty); setOpen(true); };
+
+  // Deep link from Dashboard "Add customer" quick action (/customers?new=1)
+  useEffect(() => {
+    if (searchParams.get("new") === "1") {
+      openCreate();
+      router.replace("/customers");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
   const openEdit = (c: Customer) => {
     setEditing(c);
     setForm({ name: c.name, email: c.email, phone: c.phone ?? "", address: c.address ?? "", company: c.company ?? "" });

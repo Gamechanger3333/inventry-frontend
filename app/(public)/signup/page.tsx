@@ -65,12 +65,12 @@ export default function SignupPage() {
         className="absolute inset-0 bg-cover bg-center"
         style={{ backgroundImage: "url('https://images.unsplash.com/photo-1557804506-669a67965ba0?w=1920&q=80')" }}
       />
-      <div className="absolute inset-0 bg-slate-900/70 backdrop-blur-sm" />
+      <div className="absolute inset-0 bg-slate-900/70" />
 
       <div className="relative z-10 w-full max-w-md px-4 py-8">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-primary rounded-2xl shadow-2xl mb-4">
-            <Boxes className="w-8 h-8 text-primary-foreground" />
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-violet-600 to-blue-600 rounded-2xl shadow-2xl mb-4">
+            <Boxes className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-3xl font-bold text-white tracking-tight">Nexus</h1>
           <p className="text-slate-300 mt-1">Inventory & Sales Management</p>
@@ -78,13 +78,13 @@ export default function SignupPage() {
 
         <Card className="shadow-2xl border-0 bg-white/95 backdrop-blur">
           <CardHeader className="pb-4">
-            <CardTitle className="text-xl">Create an account</CardTitle>
-            <CardDescription>Fill in the details below to get started</CardDescription>
+            <CardTitle className="text-xl text-slate-900">Create an account</CardTitle>
+            <CardDescription className="text-slate-500">Fill in the details below to get started</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-1.5">
-                <Label htmlFor="name">Full name</Label>
+                <Label htmlFor="name" className="text-slate-700">Full name</Label>
                 <Input
                   id="name"
                   type="text"
@@ -92,11 +92,12 @@ export default function SignupPage() {
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Jane Smith"
                   required
+                  className="bg-white text-slate-900 border-slate-200 placeholder:text-slate-400"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email" className="text-slate-700">Email</Label>
                 <Input
                   id="email"
                   type="email"
@@ -104,13 +105,14 @@ export default function SignupPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@company.com"
                   required
+                  className="bg-white text-slate-900 border-slate-200 placeholder:text-slate-400"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="role">Role</Label>
+                <Label htmlFor="role" className="text-slate-700">Role</Label>
                 <Select value={role} onValueChange={setRole}>
-                  <SelectTrigger id="role">
+                  <SelectTrigger id="role" className="bg-white text-slate-900 border-slate-200">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -122,7 +124,7 @@ export default function SignupPage() {
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password" className="text-slate-700">Password</Label>
                 <div className="relative">
                   <Input
                     id="password"
@@ -131,13 +133,13 @@ export default function SignupPage() {
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Min. 6 characters"
                     required
-                    className="pr-10"
+                    className="pr-10 bg-white text-slate-900 border-slate-200 placeholder:text-slate-400"
                   />
                   <Button
                     type="button"
                     variant="ghost"
                     size="icon"
-                    className="absolute right-0 top-0 h-full px-3 text-muted-foreground"
+                    className="absolute right-0 top-0 h-full px-3 text-slate-400 hover:text-slate-600"
                     onClick={() => setShowPw(!showPw)}
                   >
                     {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -146,7 +148,7 @@ export default function SignupPage() {
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="confirm">Confirm password</Label>
+                <Label htmlFor="confirm" className="text-slate-700">Confirm password</Label>
                 <div className="relative">
                   <Input
                     id="confirm"
@@ -155,13 +157,13 @@ export default function SignupPage() {
                     onChange={(e) => setConfirm(e.target.value)}
                     placeholder="Re-enter password"
                     required
-                    className="pr-10"
+                    className="pr-10 bg-white text-slate-900 border-slate-200 placeholder:text-slate-400"
                   />
                   <Button
                     type="button"
                     variant="ghost"
                     size="icon"
-                    className="absolute right-0 top-0 h-full px-3 text-muted-foreground"
+                    className="absolute right-0 top-0 h-full px-3 text-slate-400 hover:text-slate-600"
                     onClick={() => setShowConfirm(!showConfirm)}
                   >
                     {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -169,12 +171,12 @@ export default function SignupPage() {
                 </div>
               </div>
 
-              <Button type="submit" className="w-full" disabled={registerMutation.isPending}>
+              <Button type="submit" className="w-full bg-[hsl(230,70%,30%)] hover:bg-[hsl(230,70%,25%)] text-white border-[hsl(230,70%,30%)]" disabled={registerMutation.isPending}>
                 {registerMutation.isPending ? "Creating account…" : "Create account"}
               </Button>
             </form>
 
-            <p className="text-sm text-center text-muted-foreground mt-4">
+            <p className="text-sm text-center text-slate-500 mt-4">
               Already have an account?{" "}
               <Link href="/login" className="text-primary font-medium hover:underline">
                 Sign in

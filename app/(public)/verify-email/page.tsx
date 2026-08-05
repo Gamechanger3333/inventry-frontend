@@ -44,12 +44,12 @@ function VerifyEmailInner() {
         className="absolute inset-0 bg-cover bg-center"
         style={{ backgroundImage: "url('https://images.unsplash.com/photo-1557804506-669a67965ba0?w=1920&q=80')" }}
       />
-      <div className="absolute inset-0 bg-slate-900/70 backdrop-blur-sm" />
+      <div className="absolute inset-0 bg-slate-900/70" />
 
       <div className="relative z-10 w-full max-w-md px-4">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-primary rounded-2xl shadow-2xl mb-4">
-            <Boxes className="w-8 h-8 text-primary-foreground" />
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-violet-600 to-blue-600 rounded-2xl shadow-2xl mb-4">
+            <Boxes className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-3xl font-bold text-white tracking-tight">Nexus</h1>
         </div>
@@ -59,12 +59,12 @@ function VerifyEmailInner() {
             {status === "loading" && <Loader2 className="w-10 h-10 text-primary animate-spin mx-auto mb-2" />}
             {status === "success" && <CheckCircle2 className="w-10 h-10 text-emerald-500 mx-auto mb-2" />}
             {status === "error" && <XCircle className="w-10 h-10 text-destructive mx-auto mb-2" />}
-            <CardTitle className="text-xl">
+            <CardTitle className="text-xl text-slate-900">
               {status === "loading" && "Verifying your email…"}
               {status === "success" && "Email verified!"}
               {status === "error" && "Verification failed"}
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-slate-500">
               {status === "loading" && "Just a moment."}
               {status === "success" && "Redirecting you to your dashboard…"}
               {status === "error" && "This link is invalid or has expired."}

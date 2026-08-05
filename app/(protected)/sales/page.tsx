@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import {
   useListSalesOrders, useCreateSalesOrder, useUpdateSalesOrder, useDeleteSalesOrder,
   useGetSalesSummary, useListCustomers, useListProducts,
@@ -29,6 +30,8 @@ const statusClass = (s: string) =>
 export default function SalesPage() {
   const qc = useQueryClient();
   const { toast } = useToast();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [open, setOpen] = useState(false);
@@ -51,6 +54,15 @@ export default function SalesPage() {
     setForm({ customerId: 0, items: [], discount: 0, notes: "" });
     setOpen(true);
   };
+
+  // Deep link from Dashboard "New sale" quick action (/sales?new=1)
+  useEffect(() => {
+    if (searchParams.get("new") === "1") {
+      openCreate();
+      router.replace("/sales");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   const addItem = () => {
     if (!newItem.productId || !newItem.quantity) return;
