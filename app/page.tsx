@@ -1,17 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import {
   Boxes, BarChart3, ShoppingCart, Package, Users, Truck,
   FileText, Warehouse, TrendingUp, Shield, Zap,
-  CheckCircle, ArrowRight, Star, Globe, ChevronRight, Menu,
+  CheckCircle, ArrowRight, Star, Globe, ChevronRight,
   LayoutDashboard, LogOut,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -93,8 +93,8 @@ const navLinks = [
 export default function LandingPage() {
   const { user, logout } = useAuth();
   const [heroIndex, setHeroIndex] = useState(0);
-  const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState<string>("");
 
   useEffect(() => {
     const id = setInterval(() => {
@@ -103,56 +103,111 @@ export default function LandingPage() {
     return () => clearInterval(id);
   }, []);
 
+  // Scroll-spy — highlights the nav link for whichever section is in view.
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 8);
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    const ids = navLinks.map((l) => l.href.replace("#", ""));
+    const sections = ids
+      .map((id) => document.getElementById(id))
+      .filter((el): el is HTMLElement => Boolean(el));
+
+    if (sections.length === 0) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) setActiveSection(entry.target.id);
+        });
+      },
+      { rootMargin: "-40% 0px -55% 0px", threshold: 0 }
+    );
+
+    sections.forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
   }, []);
+
+  // Lock body scroll while the mobile side panel is open, and let only the
+  // panel itself scroll internally if its content overflows.
+  useEffect(() => {
+    if (mobileOpen) {
+      const scrollY = window.scrollY;
+      document.body.style.position = "fixed";
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.left = "0";
+      document.body.style.right = "0";
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.position = "";
+        document.body.style.top = "";
+        document.body.style.left = "";
+        document.body.style.right = "";
+        document.body.style.overflow = "";
+        window.scrollTo(0, scrollY);
+      };
+    }
+  }, [mobileOpen]);
 
   return (
     <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
 
-      {/* ══════════════════════════════════════
-          NAV — modern, sticky, theme-aware
-         ══════════════════════════════════════ */}
-      <header
-        className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${
-          scrolled
-            ? "bg-background/80 backdrop-blur-xl border-b border-border shadow-sm"
-            : "bg-background/40 backdrop-blur-md border-b border-transparent"
-        }`}
+      {/* ══════════════════════════════════════════════════════════
+          NAV — full-width, theme-inverted (dark theme → white bar
+          with black text; light theme → black bar with white text).
+          Every color here is theme-driven so toggling never leaves
+          a mismatched element behind.
+         ══════════════════════════════════════════════════════════ */}
+      <motion.header
+        initial={{ y: -100 }}
+        animate={{ y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="fixed top-0 inset-x-0 z-50 h-16 bg-white dark:bg-black border-b border-black/10 dark:border-white/10 transition-colors duration-300 ease-in-out"
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2.5">
-            <div className="w-8 h-8 bg-gradient-to-br from-violet-600 to-blue-600 rounded-lg flex items-center justify-center shadow-sm shadow-violet-500/30">
+        <div className="h-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+          {/* Brand */}
+          <Link href="/" className="flex items-center gap-2.5 shrink-0">
+            <div className="w-8 h-8 bg-gradient-to-br from-violet-600 to-blue-600 rounded-lg flex items-center justify-center shrink-0">
               <Boxes className="w-[18px] h-[18px] text-white" />
             </div>
-            <span className="font-semibold text-lg tracking-tight">Nexus</span>
+            <span className="text-lg font-bold text-black dark:text-white whitespace-nowrap transition-colors duration-300 ease-in-out">
+              Nexus
+            </span>
           </Link>
 
-          <nav className="hidden md:flex items-center gap-1 text-sm font-medium">
-            {navLinks.map((l) => (
-              <a
-                key={l.href}
-                href={l.href}
-                className="relative px-3 py-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
-              >
-                {l.label}
-              </a>
-            ))}
-          </nav>
+          {/* Desktop nav */}
+          <nav className="hidden md:flex items-center gap-1" aria-label="Main navigation">
+            {navLinks.map((l) => {
+              const isActive = activeSection === l.href.replace("#", "");
+              return (
+                <a
+                  key={l.href}
+                  href={l.href}
+                  className={`relative px-3 py-2 text-sm font-medium rounded-md transition-colors duration-300 ease-in-out ${
+                    isActive
+                      ? "text-black dark:text-white"
+                      : "text-black/60 dark:text-white/60 hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10"
+                  }`}
+                >
+                  {l.label}
+                  {isActive && (
+                    <span className="absolute left-3 right-3 -bottom-px h-[2px] rounded-full bg-black dark:bg-white transition-colors duration-300 ease-in-out" />
+                  )}
+                </a>
+              );
+            })}
 
-          <div className="flex items-center gap-1.5 sm:gap-2">
-            <ThemeToggle />
+            <div className="w-px h-5 bg-black/10 dark:bg-white/10 mx-2 transition-colors duration-300 ease-in-out" />
+
+            <ThemeToggle className="text-black dark:text-white hover:bg-black/5 dark:hover:bg-white/10 transition-colors duration-300 ease-in-out" />
+
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="hidden sm:flex items-center gap-2 pl-1.5 pr-3 py-1.5 rounded-full border border-border hover:bg-muted/60 transition-colors">
+                  <button className="flex items-center gap-2 pl-1.5 pr-3 py-1.5 ml-1 rounded-full border border-black/15 dark:border-white/15 hover:bg-black/5 dark:hover:bg-white/10 transition-colors duration-300 ease-in-out">
                     <div className="w-7 h-7 rounded-full bg-gradient-to-br from-violet-600 to-blue-600 flex items-center justify-center text-white text-xs font-semibold shrink-0">
                       {user.name?.charAt(0).toUpperCase() || "U"}
                     </div>
-                    <span className="text-sm font-medium max-w-[120px] truncate">{user.name}</span>
+                    <span className="text-sm font-medium max-w-[120px] truncate text-black dark:text-white transition-colors duration-300 ease-in-out">
+                      {user.name}
+                    </span>
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
@@ -172,86 +227,168 @@ export default function LandingPage() {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <>
-                <Link href="/login" className="hidden sm:block">
-                  <Button variant="ghost" size="sm" className="text-violet-600 hover:text-violet-700 hover:bg-violet-50 dark:text-violet-400 dark:hover:text-violet-300 dark:hover:bg-violet-500/10">
+              <div className="flex items-center gap-2 ml-1">
+                <Link href="/login">
+                  <button className="px-3 py-2 rounded-md text-sm font-medium text-black dark:text-white hover:bg-black/5 dark:hover:bg-white/10 transition-colors duration-300 ease-in-out">
                     Sign in
-                  </Button>
+                  </button>
                 </Link>
-                <Link href="/signup" className="hidden sm:block">
-                  <Button size="sm" className="bg-gradient-to-r from-violet-600 to-blue-600 hover:from-violet-500 hover:to-blue-500 border-0 shadow-sm shadow-violet-500/30 text-white">
+                <Link href="/signup">
+                  <button className="px-4 py-2 rounded-md text-sm font-semibold text-white bg-gradient-to-r from-violet-600 to-blue-600 hover:from-violet-500 hover:to-blue-500 transition-colors duration-300 ease-in-out">
                     Get started free
-                  </Button>
+                  </button>
                 </Link>
-              </>
+              </div>
             )}
+          </nav>
 
-            <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="md:hidden">
-                  <Menu className="w-5 h-5" />
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="right" className="w-72">
-                <SheetTitle className="flex items-center gap-2 mb-6">
-                  <div className="w-7 h-7 bg-gradient-to-br from-violet-600 to-blue-600 rounded-md flex items-center justify-center">
-                    <Boxes className="w-4 h-4 text-white" />
-                  </div>
-                  Nexus
-                </SheetTitle>
-                <nav className="flex flex-col gap-1">
-                  {navLinks.map((l) => (
-                    <a
-                      key={l.href}
-                      href={l.href}
-                      onClick={() => setMobileOpen(false)}
-                      className="px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                    >
-                      {l.label}
-                    </a>
-                  ))}
-                </nav>
-                <div className="mt-6 flex flex-col gap-2 border-t border-border pt-6">
-                  {user ? (
-                    <>
-                      <div className="flex items-center gap-2 px-1 pb-2">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-600 to-blue-600 flex items-center justify-center text-white text-xs font-semibold shrink-0">
-                          {user.name?.charAt(0).toUpperCase() || "U"}
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium truncate">{user.name}</p>
-                          <p className="text-xs text-muted-foreground truncate">{user.email}</p>
-                        </div>
-                      </div>
-                      <Link href="/dashboard" onClick={() => setMobileOpen(false)}>
-                        <Button className="w-full bg-gradient-to-r from-violet-600 to-blue-600 border-0 text-white">
-                          <LayoutDashboard className="w-4 h-4 mr-2" /> Go to Dashboard
-                        </Button>
-                      </Link>
-                      <Button
-                        variant="outline"
-                        className="w-full text-red-600 border-red-200 hover:bg-red-50 dark:text-red-400 dark:border-red-500/30 dark:hover:bg-red-500/10"
-                        onClick={() => { setMobileOpen(false); logout(); }}
-                      >
-                        <LogOut className="w-4 h-4 mr-2" /> Log out
-                      </Button>
-                    </>
-                  ) : (
-                    <>
-                      <Link href="/login" onClick={() => setMobileOpen(false)}>
-                        <Button variant="outline" className="w-full text-violet-600 border-violet-200 hover:bg-violet-50 dark:text-violet-400 dark:border-violet-500/30 dark:hover:bg-violet-500/10">Sign in</Button>
-                      </Link>
-                      <Link href="/signup" onClick={() => setMobileOpen(false)}>
-                        <Button className="w-full bg-gradient-to-r from-violet-600 to-blue-600 border-0 text-white">Get started free</Button>
-                      </Link>
-                    </>
-                  )}
-                </div>
-              </SheetContent>
-            </Sheet>
-          </div>
+          {/* Mobile hamburger — morphs into an X while open, theme-aware */}
+          <button
+            className="md:hidden relative z-[70] flex h-9 w-9 cursor-pointer flex-col items-center justify-center gap-[6px] group"
+            onClick={() => setMobileOpen((v) => !v)}
+            aria-label={mobileOpen ? "Close menu" : "Open menu"}
+            aria-expanded={mobileOpen}
+          >
+            <span className="h-px w-6 rounded-full bg-black dark:bg-white transition-colors duration-300 ease-in-out" />
+            <span className="h-px w-6 rounded-full bg-black dark:bg-white transition-colors duration-300 ease-in-out group-hover:w-4" />
+            <span className="h-px w-6 rounded-full bg-black dark:bg-white transition-colors duration-300 ease-in-out" />
+          </button>
         </div>
-      </header>
+
+        {/* Mobile Menu — fixed side panel with the rest of the page dimmed behind it */}
+        <AnimatePresence>
+          {mobileOpen && (
+            <>
+              {/* Backdrop */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.4 }}
+                className="md:hidden fixed inset-0 z-[55] bg-black/50 backdrop-blur-md"
+                onClick={() => setMobileOpen(false)}
+                aria-hidden="true"
+              />
+
+              {/* Side panel — bg/text invert with theme just like the top bar */}
+              <motion.nav
+                initial={{ x: "-100%" }}
+                animate={{ x: 0 }}
+                exit={{ x: "-100%" }}
+                transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                className="md:hidden fixed left-0 top-0 bottom-0 z-[60] flex w-[78%] max-w-[320px] flex-col overflow-y-auto bg-white dark:bg-black transition-colors duration-300 ease-in-out [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+                aria-label="Mobile navigation"
+              >
+                {/* Header */}
+                <div className="flex items-center justify-between px-6 h-16 border-b border-black/10 dark:border-white/10 transition-colors duration-300 ease-in-out">
+                  <Link href="/" className="flex items-center gap-2.5" onClick={() => setMobileOpen(false)}>
+                    <div className="w-7 h-7 bg-gradient-to-br from-violet-600 to-blue-600 rounded-md flex items-center justify-center shrink-0">
+                      <Boxes className="w-4 h-4 text-white" />
+                    </div>
+                    <span className="text-base font-bold text-black dark:text-white whitespace-nowrap transition-colors duration-300 ease-in-out">
+                      Nexus
+                    </span>
+                  </Link>
+                  <button
+                    className="cursor-pointer text-black/60 dark:text-white/60 hover:text-black dark:hover:text-white transition-colors duration-300 ease-in-out"
+                    onClick={() => setMobileOpen(false)}
+                    aria-label="Close menu"
+                  >
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                      <path d="M18 6L6 18M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+
+                {/* Stacked nav links — stagger in */}
+                <div className="flex flex-col px-6 pt-4">
+                  {navLinks.map((l, index) => {
+                    const isActive = activeSection === l.href.replace("#", "");
+                    return (
+                      <motion.div
+                        key={l.href}
+                        initial={{ opacity: 0, x: -16 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.15 + index * 0.06, duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                        className="relative py-2.5"
+                      >
+                        <a
+                          href={l.href}
+                          className={`text-sm font-medium transition-colors duration-300 ease-in-out ${
+                            isActive
+                              ? "text-black dark:text-white"
+                              : "text-black/70 dark:text-white/70 hover:text-black dark:hover:text-white"
+                          }`}
+                          onClick={() => setMobileOpen(false)}
+                        >
+                          {l.label}
+                        </a>
+                        <div className="absolute inset-x-0 bottom-0 h-px bg-black/10 dark:bg-white/10 transition-colors duration-300 ease-in-out" />
+                      </motion.div>
+                    );
+                  })}
+
+                  <motion.div
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.15 + navLinks.length * 0.06, duration: 0.3 }}
+                    className="mt-4 flex flex-col gap-2"
+                  >
+                    {user ? (
+                      <>
+                        <div className="flex items-center gap-2 px-1 pb-2">
+                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-600 to-blue-600 flex items-center justify-center text-white text-xs font-semibold shrink-0">
+                            {user.name?.charAt(0).toUpperCase() || "U"}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-sm font-medium text-black dark:text-white truncate transition-colors duration-300 ease-in-out">{user.name}</p>
+                            <p className="text-xs text-black/50 dark:text-white/50 truncate transition-colors duration-300 ease-in-out">{user.email}</p>
+                          </div>
+                        </div>
+                        <Link href="/dashboard" onClick={() => setMobileOpen(false)}>
+                          <button className="w-full py-2.5 rounded-md text-sm font-semibold text-white bg-gradient-to-r from-violet-600 to-blue-600 flex items-center justify-center transition-colors duration-300 ease-in-out">
+                            <LayoutDashboard className="w-4 h-4 mr-2" /> Go to Dashboard
+                          </button>
+                        </Link>
+                        <button
+                          className="w-full py-2.5 rounded-md text-sm font-medium text-red-600 dark:text-red-400 border border-red-500/30 hover:bg-red-500/10 flex items-center justify-center transition-colors duration-300 ease-in-out"
+                          onClick={() => { setMobileOpen(false); logout(); }}
+                        >
+                          <LogOut className="w-4 h-4 mr-2" /> Log out
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <Link href="/login" onClick={() => setMobileOpen(false)}>
+                          <button className="w-full py-2.5 rounded-md text-sm font-medium text-black dark:text-white border border-black/15 dark:border-white/15 hover:bg-black/5 dark:hover:bg-white/10 transition-colors duration-300 ease-in-out">
+                            Sign in
+                          </button>
+                        </Link>
+                        <Link href="/signup" onClick={() => setMobileOpen(false)}>
+                          <button className="w-full py-2.5 rounded-md text-sm font-semibold text-white bg-gradient-to-r from-violet-600 to-blue-600 transition-colors duration-300 ease-in-out">
+                            Get started free
+                          </button>
+                        </Link>
+                      </>
+                    )}
+                  </motion.div>
+
+                  <motion.div
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 + navLinks.length * 0.06, duration: 0.3 }}
+                    className="flex items-center gap-2 pt-4 mt-2 border-t border-black/10 dark:border-white/10 transition-colors duration-300 ease-in-out"
+                  >
+                    <ThemeToggle className="text-black dark:text-white hover:bg-black/5 dark:hover:bg-white/10 transition-colors duration-300 ease-in-out" />
+                    <span className="text-xs text-black/50 dark:text-white/50 transition-colors duration-300 ease-in-out">Toggle theme</span>
+                  </motion.div>
+                </div>
+              </motion.nav>
+            </>
+          )}
+        </AnimatePresence>
+      </motion.header>
+
 
       {/* ══════════════════════════════════════
           HERO — full-bleed HD background photo
