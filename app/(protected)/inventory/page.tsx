@@ -29,10 +29,16 @@ export default function InventoryPage() {
   const [adjustForm, setAdjustForm] = useState({ productId: 0, warehouseId: 0, quantity: 0, reason: "" });
   const [transferForm, setTransferForm] = useState({ productId: 0, fromWarehouseId: 0, toWarehouseId: 0, quantity: 0, reason: "" });
 
-  const { data: inventory = [], isLoading } = useListInventory({
-    search: search || undefined,
+  const { data: inventoryRaw = [], isLoading } = useListInventory({
     warehouseId: warehouseFilter ? Number(warehouseFilter) : undefined,
   });
+  const inventory = search
+    ? inventoryRaw.filter(
+        (i) =>
+          i.productName.toLowerCase().includes(search.toLowerCase()) ||
+          i.productSku.toLowerCase().includes(search.toLowerCase())
+      )
+    : inventoryRaw;
   const { data: warehouses = [] } = useListWarehouses();
   const { data: transactions = [] } = useListInventoryTransactions({ limit: 20 });
 
@@ -153,7 +159,7 @@ export default function InventoryPage() {
       <Dialog open={adjustOpen} onOpenChange={setAdjustOpen}>
         <DialogContent className="max-w-sm">
           <DialogHeader><DialogTitle>Adjust Inventory</DialogTitle></DialogHeader>
-          <form onSubmit={(e) => { e.preventDefault(); adjustMut.mutate({ inventoryAdjustment: adjustForm }); }} className="space-y-4">
+          <form onSubmit={(e) => { e.preventDefault(); adjustMut.mutate(adjustForm); }} className="space-y-4">
             <div className="space-y-1.5">
               <Label>Product</Label>
               <Select onValueChange={(v) => setAdjustForm({ ...adjustForm, productId: Number(v) })}>
@@ -193,7 +199,7 @@ export default function InventoryPage() {
       <Dialog open={transferOpen} onOpenChange={setTransferOpen}>
         <DialogContent className="max-w-sm">
           <DialogHeader><DialogTitle>Transfer Inventory</DialogTitle></DialogHeader>
-          <form onSubmit={(e) => { e.preventDefault(); transferMut.mutate({ inventoryTransfer: transferForm }); }} className="space-y-4">
+          <form onSubmit={(e) => { e.preventDefault(); transferMut.mutate(transferForm); }} className="space-y-4">
             <div className="space-y-1.5">
               <Label>Product</Label>
               <Select onValueChange={(v) => setTransferForm({ ...transferForm, productId: Number(v) })}>

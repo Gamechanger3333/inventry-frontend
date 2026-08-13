@@ -69,6 +69,8 @@ export interface Warehouse {
   id: number;
   name: string;
   location?: string | null;
+  description?: string | null;
+  capacity?: number | null;
   isActive: boolean;
   createdAt: string;
 }
@@ -76,6 +78,8 @@ export interface Warehouse {
 export interface WarehouseInput {
   name: string;
   location?: string;
+  description?: string;
+  capacity?: number;
   isActive?: boolean;
 }
 
@@ -108,6 +112,7 @@ export interface InventoryTransaction {
 export interface Customer {
   id: number;
   name: string;
+  company?: string | null;
   email?: string | null;
   phone?: string | null;
   address?: string | null;
@@ -120,6 +125,7 @@ export interface Customer {
 
 export interface CustomerInput {
   name: string;
+  company?: string;
   email?: string;
   phone?: string;
   address?: string;
@@ -131,10 +137,12 @@ export interface CustomerInput {
 export interface Supplier {
   id: number;
   name: string;
+  company?: string | null;
   email?: string | null;
   phone?: string | null;
   address?: string | null;
   contactPerson?: string | null;
+  rating?: number | null;
   notes?: string | null;
   orderCount: number;
   createdAt: string;
@@ -142,10 +150,12 @@ export interface Supplier {
 
 export interface SupplierInput {
   name: string;
+  company?: string;
   email?: string;
   phone?: string;
   address?: string;
   contactPerson?: string;
+  rating?: number;
   notes?: string;
 }
 

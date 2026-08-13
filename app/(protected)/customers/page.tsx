@@ -48,7 +48,7 @@ export default function CustomersPage() {
   }, [searchParams]);
   const openEdit = (c: Customer) => {
     setEditing(c);
-    setForm({ name: c.name, email: c.email, phone: c.phone ?? "", address: c.address ?? "", company: c.company ?? "" });
+    setForm({ name: c.name, email: c.email ?? "", phone: c.phone ?? "", address: c.address ?? "", company: c.company ?? "" });
     setOpen(true);
   };
 

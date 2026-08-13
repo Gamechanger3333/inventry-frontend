@@ -36,7 +36,7 @@ export default function SuppliersPage() {
   const openCreate = () => { setEditing(null); setForm(empty); setOpen(true); };
   const openEdit = (s: Supplier) => {
     setEditing(s);
-    setForm({ name: s.name, email: s.email, phone: s.phone ?? "", address: s.address ?? "", company: s.company ?? "", rating: s.rating ?? 0 });
+    setForm({ name: s.name, email: s.email ?? "", phone: s.phone ?? "", address: s.address ?? "", company: s.company ?? "", rating: s.rating ?? 0 });
     setOpen(true);
   };
 

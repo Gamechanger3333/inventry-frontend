@@ -35,7 +35,7 @@ export default function WarehousesPage() {
   const openCreate = () => { setEditing(null); setForm(empty); setOpen(true); };
   const openEdit = (w: Warehouse) => {
     setEditing(w);
-    setForm({ name: w.name, location: w.location, description: w.description ?? "", capacity: w.capacity ?? 0 });
+    setForm({ name: w.name, location: w.location ?? "", description: w.description ?? "", capacity: w.capacity ?? 0 });
     setOpen(true);
   };
 

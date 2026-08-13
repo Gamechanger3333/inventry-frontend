@@ -44,7 +44,7 @@ export default function NotificationsPage() {
   const markReadMut = useMarkNotificationRead({ mutation: { onSuccess: invalidate } });
   const markAllMut = useMarkAllNotificationsRead({ mutation: { onSuccess: () => { invalidate(); toast({ title: "All notifications marked as read" }); } } });
 
-  const unread = notifications.filter((n) => !n.read).length;
+  const unread = notifications.filter((n) => !n.isRead).length;
 
   return (
     <div className="space-y-6">
@@ -75,7 +75,7 @@ export default function NotificationsPage() {
       ) : (
         <div className="space-y-2">
           {notifications.map((n) => (
-            <Card key={n.id} className={`transition-all ${!n.read ? "shadow-sm ring-1 ring-primary/10" : "opacity-70"}`}>
+            <Card key={n.id} className={`transition-all ${!n.isRead ? "shadow-sm ring-1 ring-primary/10" : "opacity-70"}`}>
               <CardContent className="p-4">
                 <div className="flex items-start gap-4">
                   <div className={`p-2 rounded-xl shrink-0 ${typeBg(n.type)}`}>
@@ -84,14 +84,14 @@ export default function NotificationsPage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-0.5">
                       <p className="font-semibold text-sm">{n.title}</p>
-                      {!n.read && <Badge className="text-[10px] h-4 px-1.5">New</Badge>}
+                      {!n.isRead && <Badge className="text-[10px] h-4 px-1.5">New</Badge>}
                     </div>
                     <p className="text-sm text-muted-foreground">{n.message}</p>
                     <p className="text-xs text-muted-foreground mt-1.5">
                       {new Date(n.createdAt).toLocaleString()}
                     </p>
                   </div>
-                  {!n.read && (
+                  {!n.isRead && (
                     <Button variant="ghost" size="sm" className="shrink-0 text-xs h-7"
                       onClick={() => markReadMut.mutate({ id: n.id })}>
                       Dismiss
