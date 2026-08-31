@@ -1,18 +1,17 @@
-export const TOKEN_KEY = "inv_token";
+// Auth now lives in an httpOnly cookie the browser manages automatically -
+// there is no token for JS to read or store, which is the whole point
+// (an XSS bug can no longer just read a token out of localStorage). The
+// CSRF cookie below is deliberately the *one* readable piece: the backend
+// double-submit-checks it against a header we set ourselves, which a
+// cross-site page cannot do because it can't read our cookies.
+const CSRF_COOKIE = "nexus_csrf";
+const CSRF_HEADER = "x-csrf-token";
 
-export const getToken = (): string | null => {
-  if (typeof window === "undefined") return null;
-  return localStorage.getItem(TOKEN_KEY);
-};
-
-export const setToken = (token: string | null) => {
-  if (typeof window === "undefined") return;
-  if (token) {
-    localStorage.setItem(TOKEN_KEY, token);
-  } else {
-    localStorage.removeItem(TOKEN_KEY);
-  }
-};
+function readCsrfCookie(): string | null {
+  if (typeof document === "undefined") return null;
+  const match = document.cookie.split(";").map((c) => c.trim()).find((c) => c.startsWith(`${CSRF_COOKIE}=`));
+  return match ? decodeURIComponent(match.slice(CSRF_COOKIE.length + 1)) : null;
+}
 
 // Empty string = relative URL, so Next.js rewrites can proxy to the backend
 const API_BASE = "";
@@ -35,16 +34,22 @@ export async function apiFetch<T = unknown>(
   path: string,
   options: RequestInit = {}
 ): Promise<T> {
-  const token = getToken();
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
     ...(options.headers as Record<string, string>),
   };
-  if (token) headers["Authorization"] = `Bearer ${token}`;
+  const method = (options.method || "GET").toUpperCase();
+  if (!["GET", "HEAD", "OPTIONS"].includes(method)) {
+    const csrfToken = readCsrfCookie();
+    if (csrfToken) headers[CSRF_HEADER] = csrfToken;
+  }
 
   let res: Response;
   try {
-    res = await fetch(`${API_BASE}${path}`, { ...options, headers });
+    // credentials: "include" is what actually attaches the httpOnly auth
+    // cookie (and the CSRF cookie) to same-site requests — without this,
+    // every authenticated call would silently 401.
+    res = await fetch(`${API_BASE}${path}`, { ...options, headers, credentials: "include" });
   } catch {
     // Network-level failure (backend not running, DNS, connection refused,
     // etc). Surface a clear message instead of letting the raw fetch

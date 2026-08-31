@@ -14,6 +14,7 @@ import { apiFetch, ApiError } from "@/lib/api";
 
 export interface User {
   id: number;
+  organizationId: number;
   name: string;
   email: string;
   role: string;
@@ -263,7 +264,8 @@ export interface Notification {
 }
 
 export interface AuthResponse {
-  token: string;
+  // No `token` field anymore - login/verify now set an httpOnly cookie
+  // directly in the response headers, invisible to (and unreadable by) JS.
   user: User;
 }
 
@@ -280,6 +282,7 @@ export interface MessageResponse {
   // Dev-only fallbacks - see backend src/routes/auth.ts.
   devOtp?: string;
   devResetToken?: string;
+  devInviteToken?: string;
 }
 
 export interface LoginInput {
@@ -287,11 +290,52 @@ export interface LoginInput {
   password: string;
 }
 
+// Exactly one of organizationName / inviteToken must be set: the former
+// founds a brand-new company workspace (caller becomes its Administrator),
+// the latter joins an existing one via an Admin-issued invite (role comes
+// from the invite, never from this input - a signer-upper can no longer
+// just type role: "Administrator" and grant themselves admin, which the
+// previous free-text `role` field on this same endpoint allowed).
 export interface RegisterInput {
   name: string;
   email: string;
   password: string;
-  role?: string;
+  organizationName?: string;
+  inviteToken?: string;
+}
+
+export interface InviteDetails {
+  email: string;
+  role: string;
+  organizationName: string;
+}
+
+export interface CreateInviteInput {
+  email: string;
+  role: string;
+}
+
+export interface TeamMember {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+  avatar?: string | null;
+  emailVerified: boolean;
+  createdAt: string;
+}
+
+export interface PendingInvite {
+  id: number;
+  email: string;
+  role: string;
+  createdAt: string;
+  expiresAt: string;
+}
+
+export interface TeamResponse {
+  members: TeamMember[];
+  pendingInvites: PendingInvite[];
 }
 
 export interface VerifyOtpInput {
@@ -365,6 +409,37 @@ export function useRegister(options?: { mutation?: { onSuccess?: (data: Register
     mutationFn: ({ registerInput }) =>
       apiFetch<RegisterResponse>("/api/auth/register", { method: "POST", body: JSON.stringify(registerInput) }),
     onSuccess: options?.mutation?.onSuccess,
+    onError: options?.mutation?.onError,
+  });
+}
+
+// Looks up who an invite link is for, so the signup page can show
+// "Join {company} as {role}" before the user fills in the form.
+export function useInviteDetails(token: string, options?: { query?: { enabled?: boolean } }) {
+  return useQuery<InviteDetails, ApiError>({
+    queryKey: ["invite", token],
+    queryFn: () => apiFetch<InviteDetails>(`/api/auth/invite/${encodeURIComponent(token)}`),
+    enabled: (options?.query?.enabled ?? true) && !!token,
+    retry: false,
+  });
+}
+
+export function useTeam(options?: { query?: { enabled?: boolean } }) {
+  return useQuery<TeamResponse, ApiError>({
+    queryKey: ["team"],
+    queryFn: () => apiFetch<TeamResponse>("/api/auth/team"),
+    enabled: options?.query?.enabled ?? true,
+  });
+}
+
+export function useCreateInvite(options?: { mutation?: { onSuccess?: (data: MessageResponse) => void; onError?: (err: unknown) => void } }) {
+  const queryClient = useQueryClient();
+  return useMutation<MessageResponse, ApiError, CreateInviteInput>({
+    mutationFn: (input) => apiFetch<MessageResponse>("/api/auth/invite", { method: "POST", body: JSON.stringify(input) }),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["team"] });
+      options?.mutation?.onSuccess?.(data);
+    },
     onError: options?.mutation?.onError,
   });
 }

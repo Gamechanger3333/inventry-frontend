@@ -2,10 +2,11 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { getToken, setToken, apiFetch } from "@/lib/api";
+import { apiFetch } from "@/lib/api";
 
 export interface User {
   id: number;
+  organizationId: number;
   name: string;
   email: string;
   role: string;
@@ -15,7 +16,10 @@ export interface User {
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
-  login: (token: string, user: User) => void;
+  // Session cookie is already set by the backend (login/verify-otp/verify-email
+  // responses issue Set-Cookie) - this just updates the in-memory user so the
+  // UI reflects it immediately, without a token to store.
+  login: (user: User) => void;
   logout: () => void;
 }
 
@@ -27,29 +31,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
 
   useEffect(() => {
-    const token = getToken();
-    if (!token) {
-      setIsLoading(false);
-      return;
-    }
+    // No token to check client-side anymore (it's an httpOnly cookie the
+    // browser attaches automatically) - just ask the backend who, if
+    // anyone, the current cookie belongs to. A 401 here just means
+    // "not logged in", which is expected on first visit.
     apiFetch<User>("/api/auth/me")
       .then((u) => setUser(u))
-      .catch(() => {
-        setToken(null);
-        setUser(null);
-      })
+      .catch(() => setUser(null))
       .finally(() => setIsLoading(false));
   }, []);
 
-  const login = (token: string, newUser: User) => {
-    setToken(token);
+  const login = (newUser: User) => {
     setUser(newUser);
   };
 
   const logout = () => {
-    setToken(null);
-    setUser(null);
-    router.push("/login");
+    apiFetch("/api/auth/logout", { method: "POST" })
+      .catch(() => {
+        // Even if the network call fails, still clear local state and
+        // send the user to login - a stale-but-invalid cookie is no
+        // worse than what they had before clicking logout.
+      })
+      .finally(() => {
+        setUser(null);
+        router.push("/login");
+      });
   };
 
   return (

@@ -20,7 +20,7 @@ function VerifyEmailInner() {
   const verifyMutation = useVerifyEmailToken({
     mutation: {
       onSuccess: (data) => {
-        login(data.token, data.user);
+        login(data.user);
         setStatus("success");
         setTimeout(() => router.push("/dashboard"), 1500);
       },

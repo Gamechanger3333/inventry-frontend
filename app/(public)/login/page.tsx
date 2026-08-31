@@ -17,14 +17,14 @@ export default function LoginPage() {
   const router = useRouter();
   const { login } = useAuth();
   const { toast } = useToast();
-  const [email, setEmail] = useState("sarah@acmecorp.com");
+  const [email, setEmail] = useState("admin@nexus.com");
   const [password, setPassword] = useState("password123");
   const [showPw, setShowPw] = useState(false);
 
   const loginMutation = useLogin({
     mutation: {
       onSuccess: (data) => {
-        login(data.token, data.user);
+        login(data.user);
         router.push("/dashboard");
       },
       onError: (err: unknown) => {
@@ -119,7 +119,7 @@ export default function LoginPage() {
               </Link>
             </p>
             <p className="text-xs text-slate-400 text-center mt-2">
-              Demo: sarah@acmecorp.com / password123
+              Demo: admin@nexus.com / password123
             </p>
           </CardContent>
         </Card>

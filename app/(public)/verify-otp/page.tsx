@@ -25,7 +25,7 @@ function VerifyOtpForm() {
   const verifyMutation = useVerifyOtp({
     mutation: {
       onSuccess: (data) => {
-        login(data.token, data.user);
+        login(data.user);
         toast({ title: "Email verified!", description: `Welcome to Nexus, ${data.user.name}.` });
         router.push("/dashboard");
       },
