@@ -2,10 +2,10 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { Bot, Sparkles, X, ArrowRight, Send, Loader2 } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { Bot, Sparkles, X, ArrowRight, Send, Loader2, Maximize2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { usePostPublicAiChat } from "@/lib/api-hooks";
+import { usePostPublicAiChat, usePostAiChat } from "@/lib/api-hooks";
 
 // One contextual suggestion per landing-page section — tied to the id
 // attributes on each <section> in app/page.tsx.
@@ -44,19 +44,26 @@ const SECTION_TIPS: Record<string, { title: string; text: string }> = {
   },
 };
 
+interface Msg {
+  role: "user" | "assistant";
+  content: string;
+}
+
 export function AiAssistantWidget() {
   const { user, isLoading } = useAuth();
-  const router = useRouter();
+  const pathname = usePathname();
   const [activeSection, setActiveSection] = useState<string>("hero");
   const [open, setOpen] = useState(false);
   const [dismissed, setDismissed] = useState(false);
   const [bump, setBump] = useState(false);
   const [input, setInput] = useState("");
-  const [messages, setMessages] = useState<{ role: "user" | "assistant"; content: string }[]>([]);
+  const [messages, setMessages] = useState<Msg[]>([]);
   const lastSection = useRef("hero");
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const chatMut = usePostPublicAiChat({
+  // Logged-in visitors get the real, data-aware assistant; logged-out
+  // visitors get the public/marketing-scoped one. Same UI either way.
+  const publicChatMut = usePostPublicAiChat({
     mutation: {
       onSuccess: (data) => {
         setMessages((m) => [...m, { role: "assistant", content: data.message || data.reply }]);
@@ -70,16 +77,32 @@ export function AiAssistantWidget() {
     },
   });
 
+  const privateChatMut = usePostAiChat({
+    mutation: {
+      onSuccess: (data) => {
+        setMessages((m) => [...m, { role: "assistant", content: data.message || data.reply }]);
+      },
+      onError: () => {
+        setMessages((m) => [
+          ...m,
+          { role: "assistant", content: "Sorry, I couldn't reach the assistant just now. Please try again in a moment." },
+        ]);
+      },
+    },
+  });
+
+  const chatMut = user ? privateChatMut : publicChatMut;
+
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, chatMut.isPending]);
 
-  const sendMessage = () => {
-    const text = input.trim();
-    if (!text || chatMut.isPending) return;
-    setMessages((m) => [...m, { role: "user", content: text }]);
+  const sendMessage = (text?: string) => {
+    const msg = (text ?? input).trim();
+    if (!msg || chatMut.isPending) return;
+    setMessages((m) => [...m, { role: "user", content: msg }]);
     setInput("");
-    chatMut.mutate({ message: text });
+    chatMut.mutate({ message: msg });
   };
 
   useEffect(() => {
@@ -117,26 +140,19 @@ export function AiAssistantWidget() {
   // avoids a flash of the "Create account" CTA for an already-logged-in user.
   if (isLoading) return null;
 
+  // The dedicated /ai page already has this exact chat UI full-screen —
+  // skip the floating duplicate there.
+  if (pathname === "/ai") return null;
+
   const tip = SECTION_TIPS[activeSection] ?? SECTION_TIPS.hero;
+  const emptyStateText = user
+    ? "Ask me anything about your inventory, sales, suppliers, or reports — I can pull real data from your account."
+    : `${tip.text} Ask me anything about Nexus — features, pricing, or whether it fits your business.`;
 
-  // ── Logged-in: go straight to the real, working AI Assistant page ──
-  if (user) {
-    return (
-      <button
-        onClick={() => router.push("/ai")}
-        aria-label="Open AI Assistant"
-        className="fixed bottom-24 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-[hsl(230,70%,30%)] hover:bg-[hsl(230,70%,25%)] shadow-xl shadow-[hsl(230,70%,30%)]/30 text-white transition-transform hover:scale-105"
-      >
-        <Bot className="w-6 h-6" />
-      </button>
-    );
-  }
-
-  // ── Logged-out visitor: contextual marketing tips + sign-up prompts ──
   return (
-    <div className="fixed bottom-24 right-6 z-50 flex flex-col items-end gap-3">
-      {/* Contextual suggestion bubble */}
-      {!dismissed && !open && (
+    <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
+      {/* Contextual suggestion bubble — logged-out visitors only */}
+      {!user && !dismissed && !open && (
         <div
           key={activeSection}
           className="relative max-w-[260px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl rounded-br-sm shadow-xl shadow-slate-900/10 dark:shadow-black/40 p-4 animate-in fade-in slide-in-from-bottom-2 duration-500"
@@ -162,7 +178,7 @@ export function AiAssistantWidget() {
         </div>
       )}
 
-      {/* Expanded panel — real chat, no login required */}
+      {/* Expanded panel — real chat, on every page */}
       {open && (
         <div className="w-80 sm:w-96 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl shadow-slate-900/15 dark:shadow-black/50 overflow-hidden animate-in fade-in slide-in-from-bottom-3 duration-300 flex flex-col">
           <div className="bg-[hsl(230,70%,30%)] px-4 py-3 flex items-center justify-between shrink-0">
@@ -170,17 +186,26 @@ export function AiAssistantWidget() {
               <Bot className="w-4 h-4" />
               <span className="text-sm font-semibold">Nexus AI Assistant</span>
             </div>
-            <button onClick={() => setOpen(false)} aria-label="Close" className="text-white/80 hover:text-white">
-              <X className="w-4 h-4" />
-            </button>
+            <div className="flex items-center gap-3">
+              {user && (
+                <Link
+                  href="/ai"
+                  aria-label="Open full assistant page"
+                  className="text-white/80 hover:text-white"
+                >
+                  <Maximize2 className="w-3.5 h-3.5" />
+                </Link>
+              )}
+              <button onClick={() => setOpen(false)} aria-label="Close" className="text-white/80 hover:text-white">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
           </div>
 
           {/* Message history */}
           <div ref={scrollRef} className="flex-1 max-h-80 overflow-y-auto p-4 space-y-3">
             {messages.length === 0 && (
-              <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
-                {tip.text} Ask me anything about Nexus — features, pricing, or whether it fits your business.
-              </p>
+              <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">{emptyStateText}</p>
             )}
             {messages.map((m, i) => (
               <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
@@ -212,12 +237,12 @@ export function AiAssistantWidget() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-              placeholder="Ask about Nexus…"
+              placeholder={user ? "Ask about inventory, sales, suppliers…" : "Ask about Nexus…"}
               dir="auto"
               className="flex-1 text-sm bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 rounded-full px-4 py-2 outline-none focus:ring-2 focus:ring-[hsl(230,70%,30%)]/40"
             />
             <button
-              onClick={sendMessage}
+              onClick={() => sendMessage()}
               disabled={!input.trim() || chatMut.isPending}
               aria-label="Send message"
               className="w-9 h-9 shrink-0 rounded-full bg-[hsl(230,70%,30%)] hover:bg-[hsl(230,70%,25%)] disabled:opacity-40 disabled:hover:bg-[hsl(230,70%,30%)] text-white flex items-center justify-center transition-colors"
@@ -226,12 +251,14 @@ export function AiAssistantWidget() {
             </button>
           </div>
 
-          {/* Secondary CTA — doesn't block chat use */}
-          <div className="px-4 pb-3 pt-0.5 shrink-0">
-            <Link href="/signup" className="text-xs font-medium text-violet-600 dark:text-violet-400 hover:underline inline-flex items-center gap-1">
-              Create a free account for the full assistant <ArrowRight className="w-3 h-3" />
-            </Link>
-          </div>
+          {/* Secondary CTA — logged-out visitors only, doesn't block chat use */}
+          {!user && (
+            <div className="px-4 pb-3 pt-0.5 shrink-0">
+              <Link href="/signup" className="text-xs font-medium text-violet-600 dark:text-violet-400 hover:underline inline-flex items-center gap-1">
+                Create a free account for the full assistant <ArrowRight className="w-3 h-3" />
+              </Link>
+            </div>
+          )}
         </div>
       )}
 
